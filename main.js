@@ -1,5 +1,4 @@
 // Main JavaScript for shared functionality across pages
-// Main JavaScript for shared functionality across pages
 import { supabase } from './src/supabase.js';
 
 // Initialize auth state and profile dropdown
@@ -14,8 +13,16 @@ async function checkAuthState() {
     const loginLink = document.getElementById('login-link');
     const profileContainer = document.getElementById('profile-container');
     
+    // Add placeholder elements to prevent layout shift
+    if (loginLink) loginLink.style.visibility = 'hidden';
+    if (profileContainer) profileContainer.style.visibility = 'hidden';
+    
     if (session) {
-      if (loginLink) loginLink.classList.add('hidden');
+      if (loginLink) {
+        loginLink.style.display = 'none';
+        loginLink.style.visibility = 'visible';
+      }
+      
       if (profileContainer) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -23,7 +30,8 @@ async function checkAuthState() {
           .eq('id', session.user.id)
           .single();
           
-        profileContainer.classList.remove('hidden');
+        profileContainer.style.display = 'flex';
+        profileContainer.style.visibility = 'visible';
         
         const nameSpan = document.getElementById('profile-name');
         const emailDiv = document.getElementById('profile-email');
@@ -32,8 +40,14 @@ async function checkAuthState() {
         if (emailDiv) emailDiv.textContent = session.user.email;
       }
     } else {
-      if (loginLink) loginLink.classList.remove('hidden');
-      if (profileContainer) profileContainer.classList.add('hidden');
+      if (loginLink) {
+        loginLink.style.display = 'flex';
+        loginLink.style.visibility = 'visible';
+      }
+      if (profileContainer) {
+        profileContainer.style.display = 'none';
+        profileContainer.style.visibility = 'visible';
+      }
     }
   } catch (error) {
     console.error('Error checking auth state:', error);
@@ -50,7 +64,6 @@ function setupProfileDropdown() {
       profileDropdown.classList.toggle('hidden');
     });
 
-    // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
         profileDropdown.classList.add('hidden');
@@ -63,6 +76,7 @@ function setupProfileDropdown() {
     logoutBtn.addEventListener('click', async () => {
       try {
         await supabase.auth.signOut();
+        localStorage.removeItem('supabase.auth.token');
         window.location.href = 'index.html';
       } catch (error) {
         console.error('Error signing out:', error);
@@ -71,7 +85,8 @@ function setupProfileDropdown() {
     });
   }
 }
-// Toast notification function (global)
+
+// Global toast notification function
 window.showToast = function(message, type = 'success') {
   const toast = document.getElementById('toast');
   const toastMessage = document.getElementById('toast-message');
@@ -93,6 +108,7 @@ window.showToast = function(message, type = 'success') {
     toast.classList.remove('show');
   }, 3000);
 };
+
 // Format currency
 window.formatCurrency = function(number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { 

@@ -1,4 +1,3 @@
-
 import { supabase } from './src/supabase.js';
 
 let currentUser = null;
@@ -9,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   await checkAuth();
   await loadProfile();
   setupEventListeners();
+  setupProfileAvatar();
 });
 
 // Check if user is authenticated
@@ -59,10 +59,45 @@ async function loadProfile() {
     document.getElementById('member-since').textContent = formatDate(profile.created_at);
     document.getElementById('last-updated').textContent = formatDate(profile.updated_at);
     
+    // Update avatar
+    updateProfileAvatar(profile.full_name);
+    
   } catch (error) {
     console.error('Error loading profile:', error);
     showToast('Error loading profile data', 'error');
   }
+}
+
+// Setup profile avatar
+function setupProfileAvatar() {
+  const avatarElement = document.getElementById('profile-avatar');
+  if (!avatarElement) return;
+  
+  // Add hover effect
+  avatarElement.addEventListener('mouseenter', () => {
+    avatarElement.classList.add('transform', 'scale-105');
+  });
+  
+  avatarElement.addEventListener('mouseleave', () => {
+    avatarElement.classList.remove('transform', 'scale-105');
+  });
+}
+
+// Update profile avatar with initials
+function updateProfileAvatar(fullName) {
+  const avatarElement = document.getElementById('profile-avatar');
+  if (!avatarElement) return;
+  
+  const initials = fullName
+    ? fullName
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'U';
+  
+  avatarElement.textContent = initials;
 }
 
 // Setup event listeners
@@ -70,10 +105,18 @@ function setupEventListeners() {
   const form = document.getElementById('profile-form');
   const logoutBtn = document.getElementById('logout-btn');
   const cancelBtn = document.getElementById('cancel-btn');
+  const fullNameInput = document.getElementById('full_name');
   
   form.addEventListener('submit', handleSaveProfile);
   logoutBtn.addEventListener('click', handleLogout);
   cancelBtn.addEventListener('click', handleCancel);
+  
+  // Update avatar in real-time as user types their name
+  if (fullNameInput) {
+    fullNameInput.addEventListener('input', (e) => {
+      updateProfileAvatar(e.target.value);
+    });
+  }
 }
 
 // Handle profile save
@@ -105,9 +148,7 @@ async function handleSaveProfile(e) {
       })
       .eq('id', currentUser.id);
     
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
     
     // Update original data
     originalData.full_name = fullName;
@@ -130,6 +171,7 @@ async function handleSaveProfile(e) {
 function handleCancel() {
   // Reset form to original values
   document.getElementById('full_name').value = originalData.full_name;
+  updateProfileAvatar(originalData.full_name);
   showToast('Changes cancelled');
 }
 
@@ -139,6 +181,8 @@ async function handleLogout() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     
+    // Clear local storage
+    localStorage.removeItem('supabase.auth.token');
     window.location.href = 'index.html';
   } catch (error) {
     console.error('Error signing out:', error);
@@ -146,7 +190,7 @@ async function handleLogout() {
   }
 }
 
-// Utility function to format dates
+// Format dates
 function formatDate(dateString) {
   if (!dateString) return '-';
   
@@ -154,11 +198,13 @@ function formatDate(dateString) {
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   }).format(date);
 }
 
-// Toast notification function
+// Toast notification
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   const toastMessage = document.getElementById('toast-message');
