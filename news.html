@@ -104,11 +104,33 @@
             </div>
           </div>
           
-          <div class="flex items-center space-x-4">
-            <a href="login.html" class="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold px-4 py-2 rounded-lg transition-all">
-              Login
-            </a>
-          </div>
+          <!-- Replace the login button in the navigation with this -->
+<div class="flex items-center space-x-4">
+  <a href="login.html" id="login-link" class="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold px-4 py-2 rounded-lg transition-all">
+    Login
+  </a>
+  
+  <div id="profile-container" class="hidden relative">
+    <button id="profile-button" class="flex items-center space-x-2 text-gray-300 hover:text-gold-400">
+      <span id="profile-name">User</span>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </button>
+    
+    <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-black/90 border border-gold-500/30 rounded-lg shadow-lg py-1 z-50">
+      <div class="px-4 py-2 text-sm text-gray-300 border-b border-gold-500/30">
+        <div id="profile-email" class="truncate"></div>
+      </div>
+      <a href="profile.html" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gold-500/10 hover:text-gold-400">
+        Profile Settings
+      </a>
+      <button id="logout-btn" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gold-500/10 hover:text-gold-400">
+        Logout
+      </button>
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </nav>

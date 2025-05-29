@@ -1,5 +1,76 @@
 // Main JavaScript for shared functionality across pages
+// Main JavaScript for shared functionality across pages
+import { supabase } from './src/supabase.js';
 
+// Initialize auth state and profile dropdown
+document.addEventListener('DOMContentLoaded', async function() {
+  await checkAuthState();
+  setupProfileDropdown();
+});
+
+async function checkAuthState() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const loginLink = document.getElementById('login-link');
+    const profileContainer = document.getElementById('profile-container');
+    
+    if (session) {
+      if (loginLink) loginLink.classList.add('hidden');
+      if (profileContainer) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', session.user.id)
+          .single();
+          
+        profileContainer.classList.remove('hidden');
+        
+        const nameSpan = document.getElementById('profile-name');
+        const emailDiv = document.getElementById('profile-email');
+        
+        if (nameSpan) nameSpan.textContent = profile?.full_name || 'User';
+        if (emailDiv) emailDiv.textContent = session.user.email;
+      }
+    } else {
+      if (loginLink) loginLink.classList.remove('hidden');
+      if (profileContainer) profileContainer.classList.add('hidden');
+    }
+  } catch (error) {
+    console.error('Error checking auth state:', error);
+  }
+}
+
+function setupProfileDropdown() {
+  const profileButton = document.getElementById('profile-button');
+  const profileDropdown = document.getElementById('profile-dropdown');
+  
+  if (profileButton && profileDropdown) {
+    profileButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
+        profileDropdown.classList.add('hidden');
+      }
+    });
+  }
+
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Error signing out:', error);
+        showToast('Error signing out', 'error');
+      }
+    });
+  }
+}
 // Toast notification function (global)
 window.showToast = function(message, type = 'success') {
   const toast = document.getElementById('toast');
@@ -22,7 +93,6 @@ window.showToast = function(message, type = 'success') {
     toast.classList.remove('show');
   }, 3000);
 };
-
 // Format currency
 window.formatCurrency = function(number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { 
