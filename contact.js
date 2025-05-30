@@ -1,15 +1,11 @@
+
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize contact form
   initializeContactForm();
-  
-  // Initialize FAQ accordions
   initializeFAQs();
-  
-  // Initialize office locations map
   initializeOfficeLocations();
 });
 
-// Initialize contact form
+// Contact form functionality
 function initializeContactForm() {
   const contactForm = document.getElementById('contact-form');
   
@@ -23,13 +19,13 @@ function initializeContactForm() {
       const messageInput = document.getElementById('message');
       const submitButton = document.getElementById('contact-submit');
       
-      // Simple validation
+      // Check required fields
       if (!nameInput.value || !emailInput.value || !messageInput.value) {
         showToast('Please fill in all required fields', 'error');
         return;
       }
       
-      // Email validation
+      // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailInput.value)) {
         showToast('Please enter a valid email address', 'error');
@@ -41,13 +37,12 @@ function initializeContactForm() {
       submitButton.disabled = true;
       
       try {
-        // Simulate API call
+        // Simulate sending message (replace with real API later)
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Show success message
         showToast('Your message has been sent successfully! We\'ll get back to you soon.');
         
-        // Reset form
+        // Clear the form
         contactForm.reset();
       } catch (error) {
         console.error('Error sending message:', error);
@@ -60,7 +55,7 @@ function initializeContactForm() {
   }
 }
 
-// Initialize FAQ accordions
+// FAQ accordion functionality
 function initializeFAQs() {
   const faqItems = document.querySelectorAll('.faq-item');
   
@@ -70,17 +65,19 @@ function initializeFAQs() {
     const icon = item.querySelector('.faq-icon');
     
     header.addEventListener('click', function() {
-      // Toggle content visibility
+      // Toggle this FAQ
       content.classList.toggle('hidden');
       
-      // Toggle icon
+      // Update icon based on state
       if (content.classList.contains('hidden')) {
+        // Closed - show plus icon
         icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>';
       } else {
+        // Open - show minus icon
         icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6"></path></svg>';
       }
       
-      // Close other FAQs
+      // Close all other FAQs (accordion behavior)
       faqItems.forEach(otherItem => {
         if (otherItem !== item) {
           const otherContent = otherItem.querySelector('.faq-content');
@@ -94,8 +91,9 @@ function initializeFAQs() {
   });
 }
 
-// Initialize office locations
+// Office locations data and rendering
 function initializeOfficeLocations() {
+  // Office data - could move this to a separate file if it gets bigger
   const officeLocations = [
     {
       city: 'New York',
@@ -126,6 +124,7 @@ function initializeOfficeLocations() {
   const officesElement = document.getElementById('office-locations');
   if (!officesElement) return;
   
+  // Build HTML for offices
   let officesHTML = '';
   officeLocations.forEach(office => {
     officesHTML += `

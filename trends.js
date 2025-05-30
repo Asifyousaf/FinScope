@@ -1,3 +1,4 @@
+
 // Trends page JavaScript - Simple chart implementation
 // This file handles all the interactive features on the trends page
 
@@ -34,7 +35,7 @@ function loadMarketTrends() {
     const changeIcon = isPositive ? '▲' : '▼';
     
     // #Build the HTML for each market index card
-    html += 
+    html += `
       <div class="glass rounded-lg p-6">
         <h3 class="text-lg font-semibold text-gold-400 mb-2">${item.name}</h3>
         <div class="text-2xl font-bold text-white mb-1">$${item.price.toFixed(2)}</div>
@@ -42,7 +43,7 @@ function loadMarketTrends() {
           ${changeIcon} ${item.change.toFixed(2)} (${item.changePercent.toFixed(2)}%)
         </div>
       </div>
-    ;
+    `;
   });
   
   // #Put the HTML into the container
@@ -127,7 +128,7 @@ function setupStockComparison() {
       const symbol = this.dataset.symbol;
       updateStockChart(stockChart, symbol);
       
-      showToast(Selected ${symbol} for comparison);
+      showToast(`Selected ${symbol} for comparison`);
     });
   });
   
@@ -149,7 +150,7 @@ function updateStockChart(chart, symbol) {
   chart.data.datasets[0].data = stockData[symbol] || stockData['AAPL'];
   chart.update();
   
-  console.log(Updated chart for ${symbol});
+  console.log(`Updated chart for ${symbol}`);
 }
 
 // #Setup crypto chart with Chart.js
@@ -232,7 +233,7 @@ function setupCryptoChart() {
       const period = this.dataset.period;
       updateCryptoChart(cryptoChart, period);
       
-      showToast(Updated chart for ${period} period);
+      showToast(`Updated chart for ${period} period`);
     });
   });
   
@@ -272,7 +273,7 @@ function updateCryptoChart(chart, period) {
   chart.data.datasets[0].data = data.data;
   chart.update();
   
-  console.log(Updated crypto chart for ${period} period);
+  console.log(`Updated crypto chart for ${period} period`);
 }
 
 // #Setup stock search functionality
@@ -297,7 +298,7 @@ function setupStockSearch() {
       return;
     }
     
-    console.log(Searching for stock: ${symbol});
+    console.log(`Searching for stock: ${symbol}`);
     
     // #Mock stock data for demonstration
     const mockData = {
@@ -318,7 +319,7 @@ function setupStockSearch() {
       const changeIcon = isPositive ? '▲' : '▼';
       
       // #Create the HTML to show stock information
-      resultsContainer.innerHTML = 
+      resultsContainer.innerHTML = `
         <div class="glass rounded-lg p-6">
           <h3 class="text-2xl font-semibold text-gold-400 mb-2">${symbol}</h3>
           <p class="text-gray-300 mb-4">${stockData.name}</p>
@@ -339,17 +340,17 @@ function setupStockSearch() {
             </div>
           </div>
         </div>
-      ;
+      `;
       
       // #Show the results section
       resultsSection.classList.remove('hidden');
-      showToast(Found data for ${symbol});
+      showToast(`Found data for ${symbol}`);
       
-      console.log(Successfully loaded data for ${symbol});
+      console.log(`Successfully loaded data for ${symbol}`);
     } else {
       // #Stock not found in our mock data
-      showToast(No data found for ${symbol}. Try AAPL, MSFT, GOOGL, TSLA, AMZN, or META, 'error');
-      console.log(No data found for ${symbol});
+      showToast(`No data found for ${symbol}. Try AAPL, MSFT, GOOGL, TSLA, AMZN, or META`, 'error');
+      console.log(`No data found for ${symbol}`);
     }
   });
   
@@ -368,10 +369,10 @@ function showToast(message, type = 'info') {
   
   // #Set the message and style based on type
   toastMessage.textContent = message;
-  toast.className = toast ${type === 'error' ? 'error' : 'success'};
+  toast.className = `toast ${type === 'error' ? 'error' : 'success'}`;
   toast.style.display = 'block';
   
-  console.log(Toast shown: ${message} (${type}));
+  console.log(`Toast shown: ${message} (${type})`);
   
   // #Hide the toast after 3 seconds
   setTimeout(() => {

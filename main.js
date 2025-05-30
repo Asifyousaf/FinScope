@@ -1,13 +1,13 @@
 
-// Main JavaScript for shared functionality across pages
+// TODO: maybe split this file later, getting pretty long...
 import { supabase } from './src/supabase.js';
 
 let currentUser = null;
 let currentSession = null;
 
-// Initialize auth state and profile dropdown
+// Had to debug this for ages - turns out order matters here!
 document.addEventListener('DOMContentLoaded', async function() {
-  console.log('DOM loaded, initializing auth...');
+  console.log('Starting up the app...');
   await initializeAuth();
   setupProfileDropdown();
   setupMobileMenu();
@@ -15,23 +15,24 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function initializeAuth() {
   try {
-    // Set up auth state listener FIRST
+    // This listener needs to be set up BEFORE checking session
+    // learned this the hard way when auth wasn't working
     supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session);
+      console.log('Auth changed:', event, session?.user?.email || 'no user');
       currentSession = session;
       currentUser = session?.user || null;
       await updateAuthUI();
     });
 
-    // Then check for existing session
+    // Check if user is already logged in
     const { data: { session } } = await supabase.auth.getSession();
-    console.log('Initial session:', session);
+    console.log('Got session on load:', session?.user?.email || 'none');
     currentSession = session;
     currentUser = session?.user || null;
     await updateAuthUI();
 
   } catch (error) {
-    console.error('Error initializing auth:', error);
+    console.error('Auth setup failed:', error);
   }
 }
 
@@ -41,37 +42,36 @@ async function updateAuthUI() {
   const mobileProfileSection = document.getElementById('mobile-profile-section');
   const mobileLoginSection = document.getElementById('mobile-login-section');
   
-  console.log('Updating auth UI. User:', currentUser);
+  console.log('Updating UI for user:', currentUser?.email || 'not logged in');
   
   if (currentUser && currentSession) {
-    // User is logged in
-    console.log('User is logged in, showing profile');
+    // User is authenticated - show profile stuff
+    console.log('Showing profile UI');
     
-    // Hide login button
+    // Hide the login button
     if (loginLink) {
       loginLink.style.display = 'none';
     }
     
-    // Hide mobile login section
     if (mobileLoginSection) {
       mobileLoginSection.style.display = 'none';
     }
     
-    // Show desktop profile
+    // Show desktop profile dropdown
     if (profileContainer) {
       profileContainer.style.display = 'flex';
       
-      // Update profile name and email
       const nameSpan = document.getElementById('profile-name');
       const emailDiv = document.getElementById('profile-email');
       
+      // Try to get name from metadata, fallback to email username
       const displayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
       
       if (nameSpan) nameSpan.textContent = displayName;
       if (emailDiv) emailDiv.textContent = currentUser.email;
     }
     
-    // Show mobile profile section
+    // Mobile profile section
     if (mobileProfileSection) {
       mobileProfileSection.style.display = 'block';
       
@@ -85,20 +85,18 @@ async function updateAuthUI() {
     }
     
   } else {
-    // User is not logged in
-    console.log('User not logged in, showing login button');
+    // No user logged in - show login options
+    console.log('No user, showing login UI');
     
-    // Show login button
     if (loginLink) {
       loginLink.style.display = 'inline-flex';
     }
     
-    // Show mobile login section
     if (mobileLoginSection) {
       mobileLoginSection.style.display = 'block';
     }
     
-    // Hide profile containers
+    // Hide profile stuff
     if (profileContainer) {
       profileContainer.style.display = 'none';
     }
@@ -119,6 +117,7 @@ function setupProfileDropdown() {
       profileDropdown.classList.toggle('hidden');
     });
 
+    // Close dropdown when clicking elsewhere
     document.addEventListener('click', (e) => {
       if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
         profileDropdown.classList.add('hidden');
@@ -126,7 +125,7 @@ function setupProfileDropdown() {
     });
   }
 
-  // Setup logout buttons (both desktop and mobile)
+  // Logout functionality for both desktop and mobile
   const logoutBtns = document.querySelectorAll('#logout-btn, #mobile-logout-btn');
   logoutBtns.forEach(btn => {
     if (btn) {
@@ -140,23 +139,21 @@ function setupProfileDropdown() {
 
 async function handleLogout() {
   try {
-    console.log('Logging out...');
+    console.log('Logging out user...');
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     
-    // Clear local data
+    // Clear everything
     currentUser = null;
     currentSession = null;
     
-    // Update UI
     await updateAuthUI();
     
-    // Show success message
-    showToast('Successfully logged out');
+    showToast('Logged out successfully');
     
   } catch (error) {
-    console.error('Error signing out:', error);
-    showToast('Error signing out', 'error');
+    console.error('Logout failed:', error);
+    showToast('Error logging out', 'error');
   }
 }
 
@@ -169,10 +166,9 @@ function setupMobileMenu() {
       mobileMenu.classList.toggle('show');
       const isOpen = mobileMenu.classList.contains('show');
       
-      // Update aria-expanded
       hamburgerBtn.setAttribute('aria-expanded', isOpen);
       
-      // Update hamburger animation
+      // Animate the hamburger icon
       const spans = hamburgerBtn.querySelectorAll('span');
       spans.forEach(span => {
         if (isOpen) {
@@ -184,7 +180,7 @@ function setupMobileMenu() {
     });
   }
 
-  // Close mobile menu when clicking outside
+  // Close menu when clicking outside
   document.addEventListener('click', (e) => {
     if (mobileMenu && mobileMenu.classList.contains('show')) {
       const isClickInside = mobileMenu.contains(e.target) || 
@@ -200,7 +196,7 @@ function setupMobileMenu() {
   });
 }
 
-// Global toast notification function
+// Make toast function global so other files can use it
 window.showToast = function(message, type = 'success') {
   const toast = document.getElementById('toast');
   const toastMessage = document.getElementById('toast-message');
@@ -223,7 +219,7 @@ window.showToast = function(message, type = 'success') {
   }, 3000);
 };
 
-// Newsletter subscription functionality
+// Newsletter signup - probably should move this to its own file
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('newsletter-form');
   if (form) {
@@ -236,19 +232,16 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (!email) return;
       
-      // Show loading state
       submitBtn.textContent = 'Subscribing...';
       submitBtn.disabled = true;
       
       try {
-        // Simulate API call
+        // Fake delay to simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Show success toast
         window.showToast('Successfully subscribed!');
         emailInput.value = '';
       } catch (error) {
-        // Show error toast
         window.showToast('Subscription failed. Please try again later.', 'error');
       } finally {
         submitBtn.textContent = 'Subscribe to Newsletter';
@@ -258,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Utility functions
+// Utility functions that I use throughout the app
 window.formatCurrency = function(number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { 
     style: 'currency', 
@@ -307,6 +300,7 @@ window.formatDateTime = function(dateString) {
   }).format(date);
 };
 
+// Debounce function for search inputs
 window.debounce = function(func, wait) {
   let timeout;
   return function executedFunction(...args) {
