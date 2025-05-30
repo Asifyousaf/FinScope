@@ -477,10 +477,14 @@
   </div>
 </footer>
 
+
 <!-- Toast notification -->
 <div id="toast" class="toast">
   <span id="toast-message"></span>
 </div>
+
+<script type="module" src="main.js"></script>
+<script type="module" src="dashboard.js"></script>
 
 <script>
     // Toggle hamburger mobile menu
@@ -490,90 +494,6 @@ const mobileMenu = document.getElementById("mobile-menu");
 hamburgerBtn?.addEventListener("click", () => {
   mobileMenu.classList.toggle("hidden");
 });
-  // Check authentication status and update nav
-  document.addEventListener('DOMContentLoaded', async function() {
-    // Import supabase
-    const { supabase } = await import('./src/supabase.js');
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const loginLink = document.getElementById('login-link');
-      const profileLink = document.getElementById('profile-link');
-      const logoutBtn = document.getElementById('logout-btn');
-      
-      if (session) {
-        // User is logged in
-        loginLink.classList.add('hidden');
-        profileLink.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-        
-        // Handle logout
-        logoutBtn.addEventListener('click', async () => {
-          await supabase.auth.signOut();
-          window.location.reload();
-        });
-      } else {
-        // User is not logged in
-        loginLink.classList.remove('hidden');
-        profileLink.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
-      }
-    } catch (error) {
-      console.error('Error checking auth status:', error);
-    }
-  });
-
-  // Newsletter subscription functionality
-  document.getElementById('newsletter-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const emailInput = document.getElementById('email');
-    const submitBtn = document.getElementById('subscribe-btn');
-    const email = emailInput.value;
-    
-    if (!email) return;
-    
-    // Show loading state
-    submitBtn.textContent = 'Subscribing...';
-    submitBtn.disabled = true;
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success toast
-      showToast('Successfully subscribed! You\'ll receive the latest financial updates in your inbox.');
-      emailInput.value = '';
-    } catch (error) {
-      // Show error toast
-      showToast('Subscription failed. Please try again later.', 'error');
-    } finally {
-      submitBtn.textContent = 'Subscribe to Newsletter';
-      submitBtn.disabled = false;
-    }
-  });
-
-  // Toast notification function
-  function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toast-message');
-    
-    toastMessage.textContent = message;
-    toast.classList.add('show');
-    
-    if (type === 'error') {
-      toast.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-      toast.style.color = '#ef4444';
-    } else {
-      toast.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-      toast.style.color = '#f59e0b';
-    }
-    
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
-  }
 
   // Smooth scrolling for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
