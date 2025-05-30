@@ -1,179 +1,62 @@
 
 // Financial data API service
-// Using Yahoo Finance (via RapidAPI), CoinMarketCap, and Frankfurter APIs
+// Using Alpha Vantage for stock/currency data and News API for news
 
-// API Keys - Replace these with your actual API keys
-const CMC_API_KEY = '478085d0-7f9b-44bb-9b5e-f88abf9f5a3a'; // CoinMarketCap API key
-const YAHOO_API_KEY = '871a958b5cmshcf7953cd1ed6594p19be62jsn18b679fc3696'; // Yahoo Finance RapidAPI key
+const ALPHA_VANTAGE_API_KEY = 'Q1J2GM7L9WMRDS9A';
+const NEWS_API_KEY = '1cb3fb8e7cb64f9f8c7130008c22820c';
 
-// Yahoo Finance API base URL
-const YAHOO_BASE_URL = 'https://yahoo-finance15.p.rapidapi.com/api/yahoo';
-
-// Yahoo Finance API headers
-const YAHOO_HEADERS = {
-  'X-RapidAPI-Key': YAHOO_API_KEY,
-  'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com'
+// Backup currency rates in case API fails
+export const mockCurrencyData = {
+  'USD_EUR': { rate: 0.92 },
+  'EUR_USD': { rate: 1.09 },
+  'USD_GBP': { rate: 0.79 },
+  'GBP_USD': { rate: 1.27 },
+  'USD_JPY': { rate: 150.25 },
+  'JPY_USD': { rate: 0.0067 }
 };
 
-// Get stock quote data using Yahoo Finance API
+// Get stock quote data
 export async function fetchStockData(symbol) {
   try {
-    console.log(`Fetching Yahoo Finance stock data for: ${symbol}`);
-    const response = await fetch(`${YAHOO_BASE_URL}/qu/quote/${symbol}`, {
-      method: 'GET',
-      headers: YAHOO_HEADERS
-    });
+    const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`);
     const data = await response.json();
     
-    console.log(`Yahoo Finance stock data response for ${symbol}:`, data);
-    
-    // Check if we have valid stock data from Yahoo Finance
-    if (data && data.regularMarketPrice) {
+    if (data['Global Quote']) {
+      const quote = data['Global Quote'];
       return {
-        symbol: data.symbol,
-        name: data.longName || data.shortName || symbol,
-        price: parseFloat(data.regularMarketPrice),
-        change: parseFloat(data.regularMarketChange) || 0,
-        changePercent: parseFloat(data.regularMarketChangePercent) || 0,
-        volume: parseInt(data.regularMarketVolume) || 0,
-        lastUpdated: new Date().toISOString()
+        symbol: quote['01. symbol'],
+        price: parseFloat(quote['05. price']),
+        change: parseFloat(quote['09. change']),
+        changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
+        volume: parseInt(quote['06. volume']),
+        latestTradingDay: quote['07. latest trading day']
       };
     } else {
-      throw new Error(`No Yahoo Finance stock data found for ${symbol}`);
+      throw new Error('No stock data found');
     }
   } catch (error) {
-    console.error('Failed to get Yahoo Finance stock data for', symbol, ':', error);
+    console.error('Failed to get stock data for', symbol, ':', error);
     throw error;
   }
 }
 
-// Get multiple stocks data using Yahoo Finance batch request
-export async function fetchMultipleStocks(symbols) {
-  try {
-    console.log('Fetching multiple stocks from Yahoo Finance:', symbols);
-    const results = [];
-    
-    // Yahoo Finance API doesn't support batch requests, so we'll make individual calls
-    for (const symbol of symbols) {
-      try {
-        const stockData = await fetchStockData(symbol);
-        results.push(stockData);
-      } catch (error) {
-        console.error(`Failed to fetch data for ${symbol}:`, error);
-        // Continue with other symbols even if one fails
-      }
-    }
-    
-    console.log('Yahoo Finance multiple stocks results:', results);
-    return results;
-  } catch (error) {
-    console.error('Failed to get multiple stocks data from Yahoo Finance:', error);
-    throw error;
-  }
-}
-
-// Get market trending stocks using Yahoo Finance API
-export async function getTrendingStocks() {
-  try {
-    console.log('Fetching trending stocks from Yahoo Finance...');
-    const response = await fetch(`${YAHOO_BASE_URL}/tr/trending`, {
-      method: 'GET',
-      headers: YAHOO_HEADERS
-    });
-    const data = await response.json();
-    
-    console.log('Yahoo Finance trending stocks response:', data);
-    
-    // Process trending stocks data
-    if (data && data.finance && data.finance.result && data.finance.result[0]) {
-      const quotes = data.finance.result[0].quotes;
-      return quotes.slice(0, 10).map(stock => ({
-        symbol: stock.symbol,
-        name: stock.longName || stock.shortName || stock.symbol,
-        price: parseFloat(stock.regularMarketPrice) || 0,
-        change: parseFloat(stock.regularMarketChange) || 0,
-        changePercent: parseFloat(stock.regularMarketChangePercent) || 0,
-        volume: parseInt(stock.regularMarketVolume) || 0,
-        lastUpdated: new Date().toISOString()
-      }));
-    } else {
-      throw new Error('No trending stocks data available from Yahoo Finance');
-    }
-  } catch (error) {
-    console.error('Yahoo Finance trending stocks fetch failed:', error);
-    throw error;
-  }
-}
-
-// Get market movers (gainers and losers) using Yahoo Finance API
-export async function getMarketMovers() {
-  try {
-    console.log('Fetching market movers from Yahoo Finance...');
-    
-    // Get top gainers
-    const gainersResponse = await fetch(`${YAHOO_BASE_URL}/sc/screener`, {
-      method: 'POST',
-      headers: {
-        ...YAHOO_HEADERS,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        "size": 10,
-        "sortField": "percentchange",
-        "sortType": "DESC",
-        "quoteType": "EQUITY",
-        "topOperator": "AND",
-        "query": {
-          "operator": "AND",
-          "operands": [
-            {
-              "operator": "gt",
-              "operands": ["dayvolume", 100000]
-            }
-          ]
-        }
-      })
-    });
-    
-    const gainersData = await gainersResponse.json();
-    console.log('Yahoo Finance gainers response:', gainersData);
-    
-    const gainers = gainersData.quotes ? gainersData.quotes.slice(0, 5).map(stock => ({
-      symbol: stock.symbol,
-      name: stock.longName || stock.shortName || stock.symbol,
-      price: parseFloat(stock.regularMarketPrice) || 0,
-      change: parseFloat(stock.regularMarketChange) || 0,
-      changePercent: parseFloat(stock.regularMarketChangePercent) || 0,
-      volume: parseInt(stock.regularMarketVolume) || 0,
-      lastUpdated: new Date().toISOString()
-    })) : [];
-    
-    return { gainers, losers: [] }; // For now, just return gainers
-  } catch (error) {
-    console.error('Yahoo Finance market movers fetch failed:', error);
-    throw error;
-  }
-}
-
-// Get currency exchange rate using Frankfurter API (public, no key required)
+// Get currency exchange rate
 export async function fetchExchangeRate(fromCurrency, toCurrency) {
   try {
-    console.log(`Converting ${fromCurrency} to ${toCurrency} using Frankfurter API`);
-    const response = await fetch(`https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`);
+    const response = await fetch(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${fromCurrency}&to_currency=${toCurrency}&apikey=${ALPHA_VANTAGE_API_KEY}`);
     const data = await response.json();
     
-    console.log('Frankfurter exchange rate response:', data);
-    
-    // Check if we have valid exchange rate data
-    if (data.rates && data.rates[toCurrency]) {
+    if (data['Realtime Currency Exchange Rate']) {
       return {
-        rate: data.rates[toCurrency],
-        lastRefreshed: data.date,
-        fromCurrencyCode: fromCurrency,
-        toCurrencyCode: toCurrency
+        rate: parseFloat(data['Realtime Currency Exchange Rate']['5. Exchange Rate']),
+        lastRefreshed: data['Realtime Currency Exchange Rate']['6. Last Refreshed'],
+        fromCurrencyCode: data['Realtime Currency Exchange Rate']['1. From_Currency Code'],
+        fromCurrencyName: data['Realtime Currency Exchange Rate']['2. From_Currency Name'],
+        toCurrencyCode: data['Realtime Currency Exchange Rate']['3. To_Currency Code'],
+        toCurrencyName: data['Realtime Currency Exchange Rate']['4. To_Currency Name']
       };
     } else {
-      throw new Error(`Exchange rate not found for ${fromCurrency} to ${toCurrency}`);
+      throw new Error('Exchange rate not found');
     }
   } catch (error) {
     console.error('Currency API error:', error);
@@ -181,216 +64,165 @@ export async function fetchExchangeRate(fromCurrency, toCurrency) {
   }
 }
 
-// Get cryptocurrency data from CoinMarketCap API
-export async function fetchCryptoData(symbol) {
+// Get crypto data (Bitcoin, Ethereum, etc.)
+export async function fetchCryptoData(symbol, market = 'USD') {
   try {
-    console.log(`Fetching CoinMarketCap crypto data for: ${symbol}`);
-    const response = await fetch(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${symbol}`, {
-      headers: {
-        'X-CMC_PRO_API_KEY': CMC_API_KEY,
-        'Accept': 'application/json'
-      }
-    });
+    const response = await fetch(`https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_INTRADAY&symbol=${symbol}&market=${market}&apikey=${ALPHA_VANTAGE_API_KEY}`);
     const data = await response.json();
     
-    console.log(`CoinMarketCap crypto data response for ${symbol}:`, data);
-    
-    // Check if we have valid crypto data
-    if (data.data && data.data[symbol]) {
-      const crypto = data.data[symbol];
-      return {
-        symbol: crypto.symbol,
-        name: crypto.name,
-        price: crypto.quote.USD.price,
-        volume: crypto.quote.USD.volume_24h,
-        change: crypto.quote.USD.percent_change_24h,
-        lastRefreshed: crypto.last_updated
-      };
-    } else {
-      throw new Error(`CoinMarketCap crypto data not available for ${symbol}`);
-    }
-  } catch (error) {
-    console.error('CoinMarketCap crypto API failed:', error);
-    throw error;
-  }
-}
-
-// Get stock time series data using Yahoo Finance API for charts
-export async function fetchStockTimeSeries(symbol, interval = '1d', range = '1mo') {
-  try {
-    console.log(`Fetching Yahoo Finance time series for ${symbol}, interval: ${interval}, range: ${range}`);
-    const response = await fetch(`${YAHOO_BASE_URL}/hi/history/${symbol}?interval=${interval}&range=${range}`, {
-      method: 'GET',
-      headers: YAHOO_HEADERS
-    });
-    const data = await response.json();
-    
-    console.log(`Yahoo Finance time series response for ${symbol}:`, data);
-    
-    // Check if we have valid time series data
-    if (data && data.prices && Array.isArray(data.prices)) {
+    if (data['Time Series (Digital Currency Intraday)']) {
+      const timeSeries = data['Time Series (Digital Currency Intraday)'];
+      const latestTime = Object.keys(timeSeries)[0];
+      const latestData = timeSeries[latestTime];
+      
       return {
         symbol: symbol,
-        values: data.prices.map(item => ({
-          date: new Date(item.date * 1000).toISOString().split('T')[0],
-          open: parseFloat(item.open),
-          high: parseFloat(item.high),
-          low: parseFloat(item.low),
-          close: parseFloat(item.close),
-          volume: parseInt(item.volume) || 0
-        }))
+        name: data['Meta Data']['3. Digital Currency Name'],
+        price: parseFloat(latestData[`1a. price (${market})`]),
+        volume: parseFloat(latestData['5. volume']),
+        lastRefreshed: data['Meta Data']['6. Last Refreshed']
       };
     } else {
-      throw new Error(`No Yahoo Finance time series data found for ${symbol}`);
+      throw new Error('Crypto data not available');
     }
   } catch (error) {
-    console.error('Failed to get Yahoo Finance time series data for', symbol, ':', error);
+    console.error('Crypto API failed:', error);
     throw error;
   }
 }
 
-// Get major market indices using Yahoo Finance
-export async function getMarketIndices() {
-  const indices = ['^GSPC', '^IXIC', '^DJI', '^RUT']; // S&P 500, NASDAQ, Dow, Russell 2000
-  try {
-    console.log('Fetching market indices from Yahoo Finance...');
-    return await fetchMultipleStocks(indices);
-  } catch (error) {
-    console.error('Yahoo Finance market indices fetch failed:', error);
-    throw error;
+// Get historical price data for charts
+export async function fetchStockTimeSeries(symbol, interval = 'daily') {
+  let timeSeriesFunction;
+  
+  // Map interval to API function name
+  switch (interval) {
+    case 'intraday':
+      timeSeriesFunction = 'TIME_SERIES_INTRADAY';
+      break;
+    case 'daily':
+      timeSeriesFunction = 'TIME_SERIES_DAILY';
+      break;
+    case 'weekly':
+      timeSeriesFunction = 'TIME_SERIES_WEEKLY';
+      break;
+    case 'monthly':
+      timeSeriesFunction = 'TIME_SERIES_MONTHLY';
+      break;
+    default:
+      timeSeriesFunction = 'TIME_SERIES_DAILY';
   }
-}
-
-// Get major tech and popular stocks using Yahoo Finance
-export async function getMajorStocks() {
-  const stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA'];
+  
   try {
-    console.log('Fetching major stocks from Yahoo Finance...');
-    return await fetchMultipleStocks(stocks);
-  } catch (error) {
-    console.error('Yahoo Finance major stocks fetch failed:', error);
-    throw error;
-  }
-}
-
-// Get top cryptocurrencies using CoinMarketCap API
-export async function getMajorCrypto() {
-  try {
-    console.log('Fetching top cryptocurrencies from CoinMarketCap...');
-    const response = await fetch('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=10&convert=USD', {
-      headers: {
-        'X-CMC_PRO_API_KEY': CMC_API_KEY,
-        'Accept': 'application/json'
-      }
-    });
+    const url = `https://www.alphavantage.co/query?function=${timeSeriesFunction}&symbol=${symbol}&outputsize=compact${interval === 'intraday' ? '&interval=5min' : ''}&apikey=${ALPHA_VANTAGE_API_KEY}`;
+    const response = await fetch(url);
     const data = await response.json();
     
-    console.log('CoinMarketCap response:', data);
+    // Find the time series key (it varies by function)
+    const timeSeriesKey = Object.keys(data).find(key => key.includes('Time Series'));
     
-    // Check if we have valid cryptocurrency listings
-    if (data.data && Array.isArray(data.data)) {
-      return data.data.map(crypto => ({
-        symbol: crypto.symbol,
-        name: crypto.name,
-        price: crypto.quote.USD.price,
-        volume: crypto.quote.USD.volume_24h,
-        change: crypto.quote.USD.percent_change_24h,
-        lastRefreshed: crypto.last_updated
-      }));
+    if (data[timeSeriesKey]) {
+      const timeSeriesData = data[timeSeriesKey];
+      // Convert to array format for charts
+      return Object.entries(timeSeriesData).map(([date, values]) => ({
+        date,
+        open: parseFloat(values['1. open']),
+        high: parseFloat(values['2. high']),
+        low: parseFloat(values['3. low']),
+        close: parseFloat(values['4. close']),
+        volume: parseInt(values['5. volume'])
+      })).sort((a, b) => new Date(a.date) - new Date(b.date));
     } else {
-      throw new Error('CoinMarketCap crypto data not available');
+      throw new Error('No time series data available');
     }
   } catch (error) {
-    console.error('CoinMarketCap crypto data fetch failed:', error);
+    console.error('Time series API error:', error);
     throw error;
   }
 }
 
-// Get global cryptocurrency market statistics from CoinMarketCap
-export async function getGlobalMarketStats() {
+// Get financial news
+export async function fetchFinancialNews(query = 'finance', pageSize = 10) {
   try {
-    console.log('Fetching global market statistics from CoinMarketCap...');
-    const response = await fetch('https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest', {
-      headers: {
-        'X-CMC_PRO_API_KEY': CMC_API_KEY,
-        'Accept': 'application/json'
-      }
-    });
+    const response = await fetch(`https://newsapi.org/v2/everything?q=${query}&pageSize=${pageSize}&language=en&sortBy=publishedAt&apiKey=${NEWS_API_KEY}`);
     const data = await response.json();
     
-    console.log('CoinMarketCap global market stats response:', data);
-    
-    // Check if we have valid global market data
-    if (data.data) {
-      return {
-        totalMarketCap: data.data.quote.USD.total_market_cap,
-        totalVolume: data.data.quote.USD.total_volume_24h,
-        btcDominance: data.data.btc_dominance,
-        activeCryptocurrencies: data.data.active_cryptocurrencies,
-        activeExchanges: data.data.active_exchanges
-      };
+    if (data.status === 'ok') {
+      return data.articles;
     } else {
-      throw new Error('CoinMarketCap global market data not available');
+      throw new Error(data.message || 'News API error');
     }
   } catch (error) {
-    console.error('CoinMarketCap global market data fetch failed:', error);
+    console.error('News fetch failed:', error);
     throw error;
   }
 }
 
-// Search for stock symbols using Yahoo Finance
+// Search for stock symbols
 export async function searchSymbol(keywords) {
   try {
-    console.log(`Searching for symbol using Yahoo Finance: ${keywords}`);
-    const response = await fetch(`${YAHOO_BASE_URL}/se/search?q=${keywords}`, {
-      method: 'GET',
-      headers: YAHOO_HEADERS
-    });
+    const response = await fetch(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${keywords}&apikey=${ALPHA_VANTAGE_API_KEY}`);
     const data = await response.json();
     
-    console.log('Yahoo Finance symbol search response:', data);
-    
-    // Check if we have valid search results
-    if (data && data.quotes && Array.isArray(data.quotes)) {
-      return data.quotes.slice(0, 10).map(match => ({
-        symbol: match.symbol,
-        name: match.longname || match.shortname || match.symbol,
-        type: match.typeDisp || 'Stock',
-        exchange: match.exchange,
-        currency: 'USD',
-        country: 'US'
+    if (data.bestMatches) {
+      return data.bestMatches.map(match => ({
+        symbol: match['1. symbol'],
+        name: match['2. name'],
+        type: match['3. type'],
+        region: match['4. region'],
+        marketOpen: match['5. marketOpen'],
+        marketClose: match['6. marketClose'],
+        timezone: match['7. timezone'],
+        currency: match['8. currency'],
+        matchScore: match['9. matchScore']
       }));
     } else {
-      throw new Error('Yahoo Finance symbol search failed');
+      throw new Error('Symbol search failed');
     }
   } catch (error) {
-    console.error('Yahoo Finance symbol search error:', error);
+    console.error('Symbol search error:', error);
     throw error;
   }
 }
 
-// Get financial news (using mock data for now since you wanted real APIs focused on market data)
-export async function fetchFinancialNews(query, limit = 10) {
-  // Mock news data - in production you'd use a real news API
-  console.log('Fetching financial news...');
-  const mockNews = [
-    {
-      title: "Markets Rally on Strong Economic Data",
-      description: "Stock markets surged today following positive economic indicators and better-than-expected corporate earnings reports.",
-      url: "https://example.com/news1",
-      urlToImage: "https://images.pexels.com/photos/187041/pexels-photo-187041.jpeg?auto=compress&cs=tinysrgb&h=350",
-      source: { name: "Financial Times" },
-      publishedAt: new Date().toISOString()
-    },
-    {
-      title: "Cryptocurrency Market Update",
-      description: "Bitcoin and major altcoins show strong performance amid growing institutional adoption and regulatory clarity.",
-      url: "https://example.com/news2", 
-      urlToImage: "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&h=350",
-      source: { name: "CoinDesk" },
-      publishedAt: new Date().toISOString()
-    }
-  ];
+// Get major market indices (S&P 500, Dow, etc.)
+export async function getMarketIndices() {
+  const indices = ['SPY', 'DIA', 'QQQ', 'IWM']; // ETFs that track major indices
+  const promises = indices.map(symbol => fetchStockData(symbol));
   
-  return mockNews.slice(0, limit);
+  try {
+    const results = await Promise.all(promises);
+    return results;
+  } catch (error) {
+    console.error('Market indices fetch failed:', error);
+    throw error;
+  }
+}
+
+// Get major tech stocks
+export async function getMajorStocks() {
+  const stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA'];
+  const promises = stocks.map(symbol => fetchStockData(symbol));
+  
+  try {
+    const results = await Promise.all(promises);
+    return results;
+  } catch (error) {
+    console.error('Major stocks fetch failed:', error);
+    throw error;
+  }
+}
+
+// Get popular cryptocurrencies
+export async function getMajorCrypto() {
+  const cryptos = ['BTC', 'ETH', 'LTC', 'XRP', 'ADA'];
+  const promises = cryptos.map(symbol => fetchCryptoData(symbol));
+  
+  try {
+    const results = await Promise.all(promises);
+    return results;
+  } catch (error) {
+    console.error('Crypto data fetch failed:', error);
+    throw error;
+  }
 }
