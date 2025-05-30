@@ -1,36 +1,24 @@
-
-// #i updated the import path to use the correct supabase client
 import { supabase } from './src/supabase.js';
 
-// #i kept the DOM ready function simple for beginners to understand
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Login page loaded'); // #i added this to help debug if page loads
-  
-  // #i check if user is already logged in and redirect them
   checkAuthStatus();
-  
-  // #i initialize both forms
   initializeLoginForm();
   initializeRegistrationForm();
   setupFormToggle();
 });
 
-// #i added this function to check if user is already authenticated
 async function checkAuthStatus() {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      // #i redirect to dashboard if already logged in
-      console.log('User already logged in, redirecting to dashboard');
       window.location.href = 'dashboard.html';
     }
   } catch (error) {
-    console.log('Error checking auth status:', error);
+    console.error('Error checking auth status:', error);
   }
 }
 
-// #i made this function simple - it handles the login form submission
-async function initializeLoginForm() {
+function initializeLoginForm() {
   const loginForm = document.getElementById('login-form');
   
   if (loginForm) {
@@ -57,13 +45,13 @@ async function initializeLoginForm() {
 
         if (error) throw error;
 
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Store auth data
+        localStorage.setItem('sb-srbuhryhmgjxvhzjjuet-auth-token', JSON.stringify(data));
         window.location.href = 'dashboard.html';
         
       } catch (error) {
         console.error('Login error:', error);
-        let errorMessage = 'Invalid email or password';
-        showToast(errorMessage, 'error');
+        showToast('Invalid email or password', 'error');
         submitButton.textContent = 'Login';
         submitButton.disabled = false;
       }
@@ -71,7 +59,6 @@ async function initializeLoginForm() {
   }
 }
 
-// #i made this function simple - it handles the registration form submission
 async function initializeRegistrationForm() {
   const registrationForm = document.getElementById('register-form');
   
@@ -131,7 +118,6 @@ async function initializeRegistrationForm() {
   }
 }
 
-
 function setupFormToggle() {
   const loginLink = document.getElementById('login-link');
   const registerLink = document.getElementById('register-link');
@@ -151,6 +137,7 @@ function setupFormToggle() {
     }
   });
 }
+
 function switchToLoginForm() {
   document.getElementById('login-form-container').classList.remove('hidden');
   document.getElementById('register-form-container').classList.add('hidden');
