@@ -38,3 +38,21 @@ export async function getMarketMovers() {
     losers: losers.slice(0, 5)
   };
 }
+
+// Get financial news
+export async function fetchFinancialNews(query = 'finance', pageSize = 10) {
+  try {
+    const response = await fetch(`https://newsapi.org/v2/everything?q=${query}&pageSize=${pageSize}&language=en&sortBy=publishedAt&apiKey=${NEWS_API_KEY}`);
+    const data = await response.json();
+    
+    if (data.status === 'ok') {
+      return data.articles;
+    } else {
+      throw new Error(data.message || 'News API error');
+    }
+  } catch (error) {
+    console.error('News fetch failed:', error);
+    throw error;
+  }
+}
+
