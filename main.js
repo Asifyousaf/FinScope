@@ -1,6 +1,12 @@
 // Main JavaScript for shared functionality across pages
 import { supabase } from './src/supabase.js';
-
+  // Toggle hamburger mobile menu
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  
+  hamburgerBtn?.addEventListener("click", () => {
+    mobileMenu.classList.toggle("hidden");
+  });
 // Initialize auth state and profile dropdown
 document.addEventListener('DOMContentLoaded', async function() {
   await checkAuthState();
