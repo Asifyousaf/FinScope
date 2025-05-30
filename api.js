@@ -1,12 +1,11 @@
-// API service module - Real data only
 
-// Alpha Vantage API Key
+// Financial data API service
+// Using Alpha Vantage for stock/currency data and News API for news
+
 const ALPHA_VANTAGE_API_KEY = 'Q1J2GM7L9WMRDS9A';
-
-// News API Key
 const NEWS_API_KEY = '1cb3fb8e7cb64f9f8c7130008c22820c';
 
-// Mock data for fallbacks
+// Backup currency rates in case API fails
 export const mockCurrencyData = {
   'USD_EUR': { rate: 0.92 },
   'EUR_USD': { rate: 1.09 },
@@ -16,7 +15,7 @@ export const mockCurrencyData = {
   'JPY_USD': { rate: 0.0067 }
 };
 
-// Function to fetch real stock data
+// Get stock quote data
 export async function fetchStockData(symbol) {
   try {
     const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`);
@@ -33,15 +32,15 @@ export async function fetchStockData(symbol) {
         latestTradingDay: quote['07. latest trading day']
       };
     } else {
-      throw new Error('Unable to fetch stock data');
+      throw new Error('No stock data found');
     }
   } catch (error) {
-    console.error('Error fetching stock data:', error);
+    console.error('Failed to get stock data for', symbol, ':', error);
     throw error;
   }
 }
 
-// Function to fetch real currency exchange rate
+// Get currency exchange rate
 export async function fetchExchangeRate(fromCurrency, toCurrency) {
   try {
     const response = await fetch(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${fromCurrency}&to_currency=${toCurrency}&apikey=${ALPHA_VANTAGE_API_KEY}`);
@@ -57,15 +56,15 @@ export async function fetchExchangeRate(fromCurrency, toCurrency) {
         toCurrencyName: data['Realtime Currency Exchange Rate']['4. To_Currency Name']
       };
     } else {
-      throw new Error('Unable to fetch exchange rate data');
+      throw new Error('Exchange rate not found');
     }
   } catch (error) {
-    console.error('Error fetching exchange rate:', error);
+    console.error('Currency API error:', error);
     throw error;
   }
 }
 
-// Function to fetch real cryptocurrency data
+// Get crypto data (Bitcoin, Ethereum, etc.)
 export async function fetchCryptoData(symbol, market = 'USD') {
   try {
     const response = await fetch(`https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_INTRADAY&symbol=${symbol}&market=${market}&apikey=${ALPHA_VANTAGE_API_KEY}`);
@@ -84,18 +83,19 @@ export async function fetchCryptoData(symbol, market = 'USD') {
         lastRefreshed: data['Meta Data']['6. Last Refreshed']
       };
     } else {
-      throw new Error('Unable to fetch crypto data');
+      throw new Error('Crypto data not available');
     }
   } catch (error) {
-    console.error('Error fetching crypto data:', error);
+    console.error('Crypto API failed:', error);
     throw error;
   }
 }
 
-// Function to fetch historical stock data
+// Get historical price data for charts
 export async function fetchStockTimeSeries(symbol, interval = 'daily') {
   let timeSeriesFunction;
   
+  // Map interval to API function name
   switch (interval) {
     case 'intraday':
       timeSeriesFunction = 'TIME_SERIES_INTRADAY';
@@ -118,10 +118,12 @@ export async function fetchStockTimeSeries(symbol, interval = 'daily') {
     const response = await fetch(url);
     const data = await response.json();
     
+    // Find the time series key (it varies by function)
     const timeSeriesKey = Object.keys(data).find(key => key.includes('Time Series'));
     
     if (data[timeSeriesKey]) {
       const timeSeriesData = data[timeSeriesKey];
+      // Convert to array format for charts
       return Object.entries(timeSeriesData).map(([date, values]) => ({
         date,
         open: parseFloat(values['1. open']),
@@ -131,15 +133,15 @@ export async function fetchStockTimeSeries(symbol, interval = 'daily') {
         volume: parseInt(values['5. volume'])
       })).sort((a, b) => new Date(a.date) - new Date(b.date));
     } else {
-      throw new Error('Unable to fetch time series data');
+      throw new Error('No time series data available');
     }
   } catch (error) {
-    console.error('Error fetching stock time series:', error);
+    console.error('Time series API error:', error);
     throw error;
   }
 }
 
-// Function to fetch financial news
+// Get financial news
 export async function fetchFinancialNews(query = 'finance', pageSize = 10) {
   try {
     const response = await fetch(`https://newsapi.org/v2/everything?q=${query}&pageSize=${pageSize}&language=en&sortBy=publishedAt&apiKey=${NEWS_API_KEY}`);
@@ -148,15 +150,15 @@ export async function fetchFinancialNews(query = 'finance', pageSize = 10) {
     if (data.status === 'ok') {
       return data.articles;
     } else {
-      throw new Error(data.message || 'Unable to fetch news data');
+      throw new Error(data.message || 'News API error');
     }
   } catch (error) {
-    console.error('Error fetching news:', error);
+    console.error('News fetch failed:', error);
     throw error;
   }
 }
 
-// Function to search for stocks
+// Search for stock symbols
 export async function searchSymbol(keywords) {
   try {
     const response = await fetch(`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${keywords}&apikey=${ALPHA_VANTAGE_API_KEY}`);
@@ -175,29 +177,29 @@ export async function searchSymbol(keywords) {
         matchScore: match['9. matchScore']
       }));
     } else {
-      throw new Error('Unable to search for symbol');
+      throw new Error('Symbol search failed');
     }
   } catch (error) {
-    console.error('Error searching for symbol:', error);
+    console.error('Symbol search error:', error);
     throw error;
   }
 }
 
-// Function to get real market indices data
+// Get major market indices (S&P 500, Dow, etc.)
 export async function getMarketIndices() {
-  const indices = ['SPY', 'DIA', 'QQQ', 'IWM'];
+  const indices = ['SPY', 'DIA', 'QQQ', 'IWM']; // ETFs that track major indices
   const promises = indices.map(symbol => fetchStockData(symbol));
   
   try {
     const results = await Promise.all(promises);
     return results;
   } catch (error) {
-    console.error('Error fetching market indices:', error);
+    console.error('Market indices fetch failed:', error);
     throw error;
   }
 }
 
-// Function to get real major stock data
+// Get major tech stocks
 export async function getMajorStocks() {
   const stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA'];
   const promises = stocks.map(symbol => fetchStockData(symbol));
@@ -206,12 +208,12 @@ export async function getMajorStocks() {
     const results = await Promise.all(promises);
     return results;
   } catch (error) {
-    console.error('Error fetching major stocks:', error);
+    console.error('Major stocks fetch failed:', error);
     throw error;
   }
 }
 
-// Function to get real crypto data
+// Get popular cryptocurrencies
 export async function getMajorCrypto() {
   const cryptos = ['BTC', 'ETH', 'LTC', 'XRP', 'ADA'];
   const promises = cryptos.map(symbol => fetchCryptoData(symbol));
@@ -220,7 +222,7 @@ export async function getMajorCrypto() {
     const results = await Promise.all(promises);
     return results;
   } catch (error) {
-    console.error('Error fetching crypto data:', error);
+    console.error('Crypto data fetch failed:', error);
     throw error;
   }
 }
