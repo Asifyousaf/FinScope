@@ -1,3 +1,4 @@
+
 import { supabase } from './src/supabase.js';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -45,13 +46,16 @@ function initializeLoginForm() {
 
         if (error) throw error;
 
-        // Store auth data
-        localStorage.setItem('sb-srbuhryhmgjxvhzjjuet-auth-token', JSON.stringify(data));
-        window.location.href = 'dashboard.html';
+        showToast('Login successful! Redirecting...');
+        
+        // Small delay to show the success message
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1000);
         
       } catch (error) {
         console.error('Login error:', error);
-        showToast('Invalid email or password', 'error');
+        showToast(error.message || 'Invalid email or password', 'error');
         submitButton.textContent = 'Login';
         submitButton.disabled = false;
       }
@@ -82,6 +86,11 @@ async function initializeRegistrationForm() {
         return;
       }
       
+      if (passwordInput.value.length < 6) {
+        showToast('Password must be at least 6 characters long', 'error');
+        return;
+      }
+      
       submitButton.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mx-auto"></div>';
       submitButton.disabled = true;
       
@@ -103,14 +112,16 @@ async function initializeRegistrationForm() {
           setTimeout(() => {
             switchToLoginForm();
           }, 3000);
-        } else {
-          localStorage.setItem('user', JSON.stringify(authData.user));
-          window.location.href = 'dashboard.html';
+        } else if (authData.session) {
+          showToast('Registration successful! Redirecting...');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
         }
         
       } catch (error) {
         console.error('Registration error:', error);
-        showToast(error.message, 'error');
+        showToast(error.message || 'Registration failed. Please try again.', 'error');
         submitButton.textContent = 'Create Account';
         submitButton.disabled = false;
       }

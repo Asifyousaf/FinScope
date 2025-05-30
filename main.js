@@ -1,56 +1,111 @@
+
 // Main JavaScript for shared functionality across pages
 import { supabase } from './src/supabase.js';
 
+let currentUser = null;
+let currentSession = null;
+
 // Initialize auth state and profile dropdown
 document.addEventListener('DOMContentLoaded', async function() {
-  await checkAuthState();
+  console.log('DOM loaded, initializing auth...');
+  await initializeAuth();
   setupProfileDropdown();
+  setupMobileMenu();
 });
 
-async function checkAuthState() {
+async function initializeAuth() {
   try {
+    // Set up auth state listener FIRST
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
+      currentSession = session;
+      currentUser = session?.user || null;
+      await updateAuthUI();
+    });
+
+    // Then check for existing session
     const { data: { session } } = await supabase.auth.getSession();
-    const loginLink = document.getElementById('login-link');
-    const profileContainer = document.getElementById('profile-container');
-    
-    // Add placeholder elements to prevent layout shift
-    if (loginLink) loginLink.style.visibility = 'hidden';
-    if (profileContainer) profileContainer.style.visibility = 'hidden';
-    
-    if (session) {
-      if (loginLink) {
-        loginLink.style.display = 'none';
-        loginLink.style.visibility = 'visible';
-      }
-      
-      if (profileContainer) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, email')
-          .eq('id', session.user.id)
-          .single();
-          
-        profileContainer.style.display = 'flex';
-        profileContainer.style.visibility = 'visible';
-        
-        const nameSpan = document.getElementById('profile-name');
-        const emailDiv = document.getElementById('profile-email');
-        
-        if (nameSpan) nameSpan.textContent = profile?.full_name || 'User';
-        if (emailDiv) emailDiv.textContent = session.user.email;
-      }
-    } else {
-      if (loginLink) {
-        loginLink.style.display = 'flex';
-        loginLink.style.visibility = 'visible';
-      }
-      if (profileContainer) {
-        profileContainer.style.display = 'none';
-        profileContainer.style.visibility = 'visible';
-      }
-    }
+    console.log('Initial session:', session);
+    currentSession = session;
+    currentUser = session?.user || null;
+    await updateAuthUI();
+
   } catch (error) {
-    console.error('Error checking auth state:', error);
+    console.error('Error initializing auth:', error);
+  }
+}
+
+async function updateAuthUI() {
+  const loginLink = document.getElementById('login-link');
+  const profileContainer = document.getElementById('profile-container');
+  const mobileProfileSection = document.getElementById('mobile-profile-section');
+  const mobileLoginSection = document.getElementById('mobile-login-section');
+  
+  console.log('Updating auth UI. User:', currentUser);
+  
+  if (currentUser && currentSession) {
+    // User is logged in
+    console.log('User is logged in, showing profile');
+    
+    // Hide login button
+    if (loginLink) {
+      loginLink.style.display = 'none';
+    }
+    
+    // Hide mobile login section
+    if (mobileLoginSection) {
+      mobileLoginSection.style.display = 'none';
+    }
+    
+    // Show desktop profile
+    if (profileContainer) {
+      profileContainer.style.display = 'flex';
+      
+      // Update profile name and email
+      const nameSpan = document.getElementById('profile-name');
+      const emailDiv = document.getElementById('profile-email');
+      
+      const displayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+      
+      if (nameSpan) nameSpan.textContent = displayName;
+      if (emailDiv) emailDiv.textContent = currentUser.email;
+    }
+    
+    // Show mobile profile section
+    if (mobileProfileSection) {
+      mobileProfileSection.style.display = 'block';
+      
+      const mobileUserName = document.getElementById('mobile-user-name');
+      const mobileUserEmail = document.getElementById('mobile-user-email');
+      
+      const displayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+      
+      if (mobileUserName) mobileUserName.textContent = displayName;
+      if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email;
+    }
+    
+  } else {
+    // User is not logged in
+    console.log('User not logged in, showing login button');
+    
+    // Show login button
+    if (loginLink) {
+      loginLink.style.display = 'inline-flex';
+    }
+    
+    // Show mobile login section
+    if (mobileLoginSection) {
+      mobileLoginSection.style.display = 'block';
+    }
+    
+    // Hide profile containers
+    if (profileContainer) {
+      profileContainer.style.display = 'none';
+    }
+    
+    if (mobileProfileSection) {
+      mobileProfileSection.style.display = 'none';
+    }
   }
 }
 
@@ -71,19 +126,78 @@ function setupProfileDropdown() {
     });
   }
 
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      try {
-        await supabase.auth.signOut();
-        localStorage.removeItem('supabase.auth.token');
-        window.location.href = 'index.html';
-      } catch (error) {
-        console.error('Error signing out:', error);
-        showToast('Error signing out', 'error');
-      }
+  // Setup logout buttons (both desktop and mobile)
+  const logoutBtns = document.querySelectorAll('#logout-btn, #mobile-logout-btn');
+  logoutBtns.forEach(btn => {
+    if (btn) {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await handleLogout();
+      });
+    }
+  });
+}
+
+async function handleLogout() {
+  try {
+    console.log('Logging out...');
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    
+    // Clear local data
+    currentUser = null;
+    currentSession = null;
+    
+    // Update UI
+    await updateAuthUI();
+    
+    // Show success message
+    showToast('Successfully logged out');
+    
+  } catch (error) {
+    console.error('Error signing out:', error);
+    showToast('Error signing out', 'error');
+  }
+}
+
+function setupMobileMenu() {
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  
+  if (hamburgerBtn && mobileMenu) {
+    hamburgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('show');
+      const isOpen = mobileMenu.classList.contains('show');
+      
+      // Update aria-expanded
+      hamburgerBtn.setAttribute('aria-expanded', isOpen);
+      
+      // Update hamburger animation
+      const spans = hamburgerBtn.querySelectorAll('span');
+      spans.forEach(span => {
+        if (isOpen) {
+          span.classList.add('active');
+        } else {
+          span.classList.remove('active');
+        }
+      });
     });
   }
+
+  // Close mobile menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (mobileMenu && mobileMenu.classList.contains('show')) {
+      const isClickInside = mobileMenu.contains(e.target) || 
+                          hamburgerBtn.contains(e.target);
+      
+      if (!isClickInside) {
+        mobileMenu.classList.remove('show');
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+        const spans = hamburgerBtn.querySelectorAll('span');
+        spans.forEach(span => span.classList.remove('active'));
+      }
+    }
+  });
 }
 
 // Global toast notification function
@@ -109,72 +223,6 @@ window.showToast = function(message, type = 'success') {
   }, 3000);
 };
 
-// Format currency
-window.formatCurrency = function(number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', { 
-    style: 'currency', 
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(number);
-};
-
-// Format percentage
-window.formatPercentage = function(number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'percent',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(number / 100);
-};
-
-// Format date
-window.formatDate = function(dateString) {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  }).format(date);
-};
-
-// Format time
-window.formatTime = function(dateString) {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  }).format(date);
-};
-
-// Format date and time
-window.formatDateTime = function(dateString) {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  }).format(date);
-};
-
-// Debounce function for search inputs
-window.debounce = function(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};
-
 // Newsletter subscription functionality
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('newsletter-form');
@@ -197,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Show success toast
-        window.showToast('Successfully subscribed! You\'ll receive the latest financial updates in your inbox.');
+        window.showToast('Successfully subscribed!');
         emailInput.value = '';
       } catch (error) {
         // Show error toast
@@ -208,56 +256,65 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
-  // Smooth scrolling for anchor links
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth'
-        });
-      }
-    });
-  });
 });
 
- // Setup mobile menu
- const mobileMenuBtn = document.getElementById('mobile-menu-btn');
- const mobileMenu = document.getElementById('mobile-menu');
- 
- if (mobileMenuBtn && mobileMenu) {
-   mobileMenuBtn.addEventListener('click', () => {
-     mobileMenu.classList.toggle('show');
-     const isOpen = mobileMenu.classList.contains('show');
-     
-     // Update aria-expanded
-     mobileMenuBtn.setAttribute('aria-expanded', isOpen);
-     
-     // Update icon
-     const icon = mobileMenuBtn.querySelector('.menu-icon');
-     if (icon) {
-       icon.innerHTML = isOpen 
-         ? `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`
-         : `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
-     }
-   });
- }
+// Utility functions
+window.formatCurrency = function(number, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', { 
+    style: 'currency', 
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(number);
+};
 
- // Close mobile menu when clicking outside
- document.addEventListener('click', (e) => {
-   if (mobileMenu && mobileMenu.classList.contains('show')) {
-     const isClickInside = mobileMenu.contains(e.target) || 
-                         mobileMenuBtn.contains(e.target);
-     
-     if (!isClickInside) {
-       mobileMenu.classList.remove('show');
-       mobileMenuBtn.setAttribute('aria-expanded', 'false');
-       const icon = mobileMenuBtn.querySelector('.menu-icon');
-       if (icon) {
-         icon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
-       }
-     }
-   }
- });
+window.formatPercentage = function(number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(number / 100);
+};
+
+window.formatDate = function(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  }).format(date);
+};
+
+window.formatTime = function(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }).format(date);
+};
+
+window.formatDateTime = function(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }).format(date);
+};
+
+window.debounce = function(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
