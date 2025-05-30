@@ -128,7 +128,7 @@ function renderNewsArticles(container, articles, type) {
       
       html += `
         <div class="glass glass-hover rounded-lg overflow-hidden">
-          <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="block">
+          <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="block" onclick="window.open('${article.url}', '_blank')">
             <div class="relative h-40 overflow-hidden">
               <img 
                 src="${article.urlToImage || 'https://images.pexels.com/photos/187041/pexels-photo-187041.jpeg?auto=compress&cs=tinysrgb&h=350'}" 
@@ -164,7 +164,7 @@ function renderNewsArticles(container, articles, type) {
       
       html += `
         <div class="glass glass-hover rounded-lg overflow-hidden">
-          <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="block">
+          <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="block" onclick="window.open('${article.url}', '_blank')">
             <div class="flex flex-col md:flex-row">
               <div class="md:w-1/4 h-40 md:h-auto overflow-hidden">
                 <img 
@@ -243,7 +243,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'Federal Reserve Holds Interest Rates Steady, Signals Future Cuts',
       description: 'The Federal Reserve maintained its benchmark interest rate, but indicated that rate cuts could be on the horizon as inflation pressures ease.',
-      url: '#',
+      url: 'https://www.reuters.com/markets/us/fed-holds-rates-steady-signals-cuts-coming-2024-03-20/',
       urlToImage: 'https://images.pexels.com/photos/2988232/pexels-photo-2988232.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'Financial Times' },
       publishedAt: '2024-05-01T14:30:00Z'
@@ -251,7 +251,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'Global Markets Rally as Tech Stocks Lead Gains',
       description: 'Stock markets worldwide surged on Thursday, with technology shares leading the advance amid positive earnings reports from major tech companies.',
-      url: '#',
+      url: 'https://www.bloomberg.com/markets',
       urlToImage: 'https://images.pexels.com/photos/7567460/pexels-photo-7567460.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'Wall Street Journal' },
       publishedAt: '2024-05-02T09:45:00Z'
@@ -259,7 +259,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'Bitcoin Breaks $70,000 Barrier Amid Institutional Adoption',
       description: 'Bitcoin surpassed $70,000 for the first time, driven by increasing institutional investment and growing acceptance as a legitimate asset class.',
-      url: '#',
+      url: 'https://www.coindesk.com/markets',
       urlToImage: 'https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'Bloomberg' },
       publishedAt: '2024-05-01T16:20:00Z'
@@ -267,7 +267,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'Oil Prices Fall as OPEC+ Considers Production Increase',
       description: 'Crude oil prices dropped on Wednesday following reports that OPEC+ members are discussing a potential increase in production quotas.',
-      url: '#',
+      url: 'https://www.reuters.com/markets/commodities',
       urlToImage: 'https://images.pexels.com/photos/247763/pexels-photo-247763.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'Reuters' },
       publishedAt: '2024-05-01T11:15:00Z'
@@ -275,7 +275,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'U.S. Economy Adds 280,000 Jobs in April, Exceeding Expectations',
       description: 'The U.S. labor market showed continued strength as employers added 280,000 jobs in April, surpassing economists\' forecasts and keeping unemployment at historic lows.',
-      url: '#',
+      url: 'https://www.cnbc.com/economy/',
       urlToImage: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'CNBC' },
       publishedAt: '2024-05-03T13:45:00Z'
@@ -283,7 +283,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'European Central Bank Signals Interest Rate Cut in June',
       description: 'The ECB indicated it may lower interest rates at its June meeting, responding to easing inflation pressures across the eurozone.',
-      url: '#',
+      url: 'https://www.ft.com/markets',
       urlToImage: 'https://images.pexels.com/photos/164474/pexels-photo-164474.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'The Economist' },
       publishedAt: '2024-05-02T15:30:00Z'
@@ -291,7 +291,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'Major Tech Company Announces $10 Billion AI Investment',
       description: 'A leading technology corporation unveiled plans to invest $10 billion in artificial intelligence research and development over the next five years.',
-      url: '#',
+      url: 'https://techcrunch.com',
       urlToImage: 'https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'TechCrunch' },
       publishedAt: '2024-05-02T10:15:00Z'
@@ -299,7 +299,7 @@ function loadFallbackNews(container, type, category = '') {
     {
       title: 'Global Supply Chain Constraints Easing, Report Finds',
       description: 'A new industry report indicates that global supply chain disruptions are gradually diminishing, potentially relieving inflation pressures.',
-      url: '#',
+      url: 'https://www.wsj.com/news/markets',
       urlToImage: 'https://images.pexels.com/photos/1427541/pexels-photo-1427541.jpeg?auto=compress&cs=tinysrgb&h=350',
       source: { name: 'Supply Chain Digest' },
       publishedAt: '2024-05-01T08:45:00Z'
@@ -330,4 +330,27 @@ function loadFallbackNews(container, type, category = '') {
   }
   
   renderNewsArticles(container, articles, type);
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toast-message');
+  
+  if (!toast || !toastMessage) return;
+  
+  toastMessage.textContent = message;
+  toast.classList.add('show');
+  
+  if (type === 'error') {
+    toast.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+    toast.style.color = '#ef4444';
+  } else {
+    toast.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+    toast.style.color = '#f59e0b';
+  }
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
 }
