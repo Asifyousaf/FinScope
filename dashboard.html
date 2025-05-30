@@ -347,6 +347,15 @@
     </div>
   </div>
 </footer>
+<script>
+  // Toggle hamburger mobile menu
+const hamburgerBtn = document.getElementById("hamburger-btn");
+const mobileMenu = document.getElementById("mobile-menu");
+
+hamburgerBtn?.addEventListener("click", () => {
+  mobileMenu.classList.toggle("hidden");
+});
+</script>
     <!-- Toast notification -->
     <div id="toast" class="toast">
       <span id="toast-message"></span>
