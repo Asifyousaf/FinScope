@@ -93,8 +93,3 @@ export async function fetchCryptoTimeSeries(symbol = 'BTCUSD', interval = '1hour
     price: item.close
   }));
 }
-export {
-  fetchStockTimeSeries,
-  fetchCryptoTimeSeries,
-
-};
