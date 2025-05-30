@@ -82,8 +82,7 @@
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 glass">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          
+        <div class="flex items-center justify-between h-16">
           <!-- Logo -->
           <div class="flex items-center space-x-2">
             <div class="w-8 h-8 bg-gradient-to-r from-gold-400 to-gold-600 rounded-lg flex items-center justify-center">
@@ -94,39 +93,35 @@
             <span class="text-xl font-bold gradient-text">FinScope</span>
           </div>
     
-          <!-- Hamburger (Mobile) -->
-          <div class="md:hidden">
-            <button id="hamburger-btn" class="text-gray-300 hover:text-gold-400 focus:outline-none">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+          <!-- Main Navigation Links (Centered) -->
+          <div class="hidden md:flex items-center justify-center flex-1 px-8">
+            <div class="flex space-x-8">
+              <a href="#" class="text-gray-300 hover:text-gold-400 transition-colors">Home</a>
+              <a href="dashboard.html" class="text-gray-300 hover:text-gold-400 transition-colors">Dashboard</a>
+              <a href="currency.html" class="text-gray-300 hover:text-gold-400 transition-colors">Currency</a>
+              <a href="news.html" class="text-gray-300 hover:text-gold-400 transition-colors">News</a>
+              <a href="trends.html" class="text-gray-300 hover:text-gold-400 transition-colors">Trends</a>
+              <a href="about.html" class="text-gray-300 hover:text-gold-400 transition-colors">About</a>
+              <a href="contact.html" class="text-gray-300 hover:text-gold-400 transition-colors">Contact</a>
+            </div>
           </div>
     
-          <!-- Desktop Nav Links + Login -->
-          <div class="hidden md:flex md:items-center md:space-x-8">
-            <a href="#" class="text-gray-300 hover:text-gold-400 transition-colors">Home</a>
-            <a href="dashboard.html" class="text-gray-300 hover:text-gold-400 transition-colors">Dashboard</a>
-            <a href="currency.html" class="text-gray-300 hover:text-gold-400 transition-colors">Currency</a>
-            <a href="news.html" class="text-gray-300 hover:text-gold-400 transition-colors">News</a>
-            <a href="trends.html" class="text-gray-300 hover:text-gold-400 transition-colors">Trends</a>
-            <a href="about.html" class="text-gray-300 hover:text-gold-400 transition-colors">About</a>
-            <a href="contact.html" class="text-gray-300 hover:text-gold-400 transition-colors">Contact</a>
-          </div>
-    
-          <!-- Desktop Login/Profile -->
-          <div class="hidden md:flex items-center space-x-4">
+          <!-- Right Side: Login/Profile Section -->
+          <div class="flex items-center space-x-4">
+            <!-- Login Button (shown when logged out) -->
             <a href="login.html" id="login-link" class="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold px-4 py-2 rounded-lg transition-all">
               Login
             </a>
+    
+            <!-- Profile Dropdown (shown when logged in) -->
             <div id="profile-container" class="hidden relative">
-              <button id="profile-button" class="flex items-center space-x-2 text-gray-300 hover:text-gold-400">
+              <button id="profile-button" class="flex items-center space-x-2 text-gray-300 hover:text-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50 rounded-lg px-3 py-2">
                 <span id="profile-name">User</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
-              <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-black/90 border border-gold-500/30 rounded-lg shadow-lg py-1 z-50">
+              <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-black/90 border border-gold-500/30 rounded-lg shadow-lg py-1">
                 <div class="px-4 py-2 text-sm text-gray-300 border-b border-gold-500/30">
                   <div id="profile-email" class="truncate"></div>
                 </div>
@@ -138,22 +133,27 @@
                 </button>
               </div>
             </div>
-          </div>
     
+            <!-- Mobile Menu Button -->
+            <button id="hamburger-btn" class="md:hidden text-gray-300 hover:text-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50 rounded-lg p-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
         </div>
     
-        <!-- Mobile Dropdown Menu -->
-        <div id="mobile-menu" class="md:hidden hidden mt-2 px-4 pb-4">
-          <a href="#" class="block py-2 text-gray-300 hover:text-gold-400">Home</a>
-          <a href="dashboard.html" class="block py-2 text-gray-300 hover:text-gold-400">Dashboard</a>
-          <a href="currency.html" class="block py-2 text-gray-300 hover:text-gold-400">Currency</a>
-          <a href="news.html" class="block py-2 text-gray-300 hover:text-gold-400">News</a>
-          <a href="trends.html" class="block py-2 text-gray-300 hover:text-gold-400">Trends</a>
-          <a href="about.html" class="block py-2 text-gray-300 hover:text-gold-400">About</a>
-          <a href="contact.html" class="block py-2 text-gray-300 hover:text-gold-400">Contact</a>
-          <a href="login.html" class="block mt-2 bg-gradient-to-r from-gold-500 to-gold-600 text-black font-semibold px-4 py-2 rounded-lg text-center">
-            Login
-          </a>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden">
+          <div class="px-2 pt-2 pb-3 space-y-1">
+            <a href="#" class="block px-3 py-2 rounded-lg text-gray-300 hover:text-gold-400 hover:bg-gold-500/10">Home</a>
+            <a href="dashboard.html" class="block px-3 py-2 rounded-lg text-gray-300 hover:text-gold-400 hover:bg-gold-500/10">Dashboard</a>
+            <a href="currency.html" class="block px-3 py-2 rounded-lg text-gray-300 hover:text-gold-400 hover:bg-gold-500/10">Currency</a>
+            <a href="news.html" class="block px-3 py-2 rounded-lg text-gray-300 hover:text-gold-400 hover:bg-gold-500/10">News</a>
+            <a href="trends.html" class="block px-3 py-2 rounded-lg text-gray-300 hover:text-gold-400 hover:bg-gold-500/10">Trends</a>
+            <a href="about.html" class="block px-3 py-2 rounded-lg text-gray-300 hover:text-gold-400 hover:bg-gold-500/10">About</a>
+            <a href="contact.html" class="block px-3 py-2 rounded-lg text-gray-300 hover:text-gold-400 hover:bg-gold-500/10">Contact</a>
+          </div>
         </div>
       </div>
     </nav>
