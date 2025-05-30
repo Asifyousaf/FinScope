@@ -23,22 +23,29 @@ async function renderMarketTrends() {
   if (!container) return;
   try {
     const indices = await getMarketIndices();
+    console.log('Market indices:', indices);
     let html = '';
     indices.forEach(item => {
+      console.log('Index item:', item);
       const changeClass = item.change >= 0 ? 'text-neon-green' : 'text-red-500';
       const icon = item.change >= 0 ? '▲' : '▼';
+
+      // Defensive checks:
+      const changePercent = item.changePercent ?? 0;
+
       html += `
         <div class="glass rounded-lg p-6">
           <h3 class="text-lg font-semibold text-gold-400 mb-2">${item.symbol}</h3>
           <div class="text-2xl font-bold text-white mb-1">$${item.price.toFixed(2)}</div>
           <div class="${changeClass}">
-            ${icon} ${item.change.toFixed(2)} (${item.changePercent.toFixed(2)}%)
+            ${icon} ${item.change.toFixed(2)} (${changePercent.toFixed(2)}%)
           </div>
         </div>
       `;
     });
     container.innerHTML = html;
   } catch (err) {
+    console.error('Error in renderMarketTrends:', err);
     container.innerHTML = '<p class="text-red-500">Failed to load market trends</p>';
   }
 }
@@ -133,7 +140,7 @@ async function updateCryptoChart(period) {
   try {
     const data = await fetchCryptoTimeSeries('BTCUSD', period);
     const labels = data.map(p => p.date);
-    const values = data.map(p => p.close);
+    const values = data.map(p => p.price);
     cryptoChart.data.labels = labels;
     cryptoChart.data.datasets = [{
       label: 'BTCUSD',
