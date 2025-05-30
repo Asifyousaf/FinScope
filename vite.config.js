@@ -13,7 +13,8 @@ export default defineConfig({
         news: 'news.html',
         about: 'about.html',
         contact: 'contact.html',
-        login: 'login.html'
+        login: 'login.html',
+        profile: 'profile.html'
       }
     }
   },
