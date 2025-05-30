@@ -1,5 +1,7 @@
 // trends.js - Fully functional with original UI structure using Alpha Vantage API only
-const ALPHA_VANTAGE_API_KEY = 'Q1J2GM7L9WMRDS9A';
+const ALPHA_VANTAGE_API_KEY = 'RGHLGIFYBZMTCTFF';
+
+let stockChart = null;
 
 document.addEventListener('DOMContentLoaded', function () {
   console.log('Trends page loaded successfully');
@@ -111,9 +113,66 @@ function setupStockSearch() {
   });
 }
 
-// Placeholders (update later with TIME_SERIES data)
 function setupStockComparison() {
-  console.log('Stock comparison chart placeholder loaded');
+  const chartCanvas = document.getElementById('stock-comparison-chart');
+  const stockSelectors = document.querySelectorAll('.stock-selector');
+  if (!chartCanvas || stockSelectors.length === 0) return;
+
+  const ctx = chartCanvas.getContext('2d');
+  stockChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: '',
+        data: [],
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#f59e0b' } }
+      },
+      scales: {
+        x: { ticks: { color: '#f59e0b' }, grid: { color: 'rgba(245, 158, 11, 0.2)' } },
+        y: { ticks: { color: '#f59e0b' }, grid: { color: 'rgba(245, 158, 11, 0.2)' } }
+      }
+    }
+  });
+
+  stockSelectors.forEach(button => {
+    button.addEventListener('click', () => {
+      stockSelectors.forEach(btn => btn.classList.remove('bg-gold-500'));
+      button.classList.add('bg-gold-500');
+      const symbol = button.dataset.symbol;
+      updateStockChart(stockChart, symbol);
+      showToast(`Selected ${symbol} for comparison`);
+    });
+  });
+}
+
+async function updateStockChart(chart, symbol) {
+  try {
+    const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`);
+    const data = await res.json();
+    const series = data['Time Series (Daily)'];
+    if (!series) throw new Error('Invalid data');
+
+    const dates = Object.keys(series).slice(0, 6).reverse();
+    const prices = dates.map(date => parseFloat(series[date]['4. close']));
+
+    chart.data.labels = dates;
+    chart.data.datasets[0].label = symbol;
+    chart.data.datasets[0].data = prices;
+    chart.update();
+  } catch (err) {
+    console.error(err);
+    showToast(`Failed to load chart for ${symbol}`, 'error');
+  }
 }
 
 function setupCryptoChart() {
