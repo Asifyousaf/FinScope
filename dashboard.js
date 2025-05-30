@@ -1,44 +1,26 @@
-
+// Dashboard JavaScript - Handles all dashboard functionality with real API data
 import { 
-  fetchStockData,
   getMarketIndices,
   getMajorStocks,
-  getMajorCrypto
+  getMajorCrypto,
+  getMarketMovers
 } from './api.js';
 
-// Fallback data for when API calls fail
-const fallbackMarketData = [
-  { symbol: 'SPY', price: 501.24, change: 1.53, changePercent: 0.31, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'QQQ', price: 378.45, change: -2.15, changePercent: -0.56, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'DIA', price: 390.82, change: 0.75, changePercent: 0.19, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'IWM', price: 218.93, change: -0.42, changePercent: -0.19, latestTradingDay: new Date().toISOString().split('T')[0] }
-];
-
-const fallbackStockData = [
-  { symbol: 'AAPL', price: 189.25, change: 2.18, changePercent: 1.17, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'MSFT', price: 415.67, change: -1.23, changePercent: -0.29, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'GOOGL', price: 172.48, change: 3.45, changePercent: 2.04, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'AMZN', price: 181.92, change: -0.87, changePercent: -0.47, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'META', price: 524.31, change: 4.76, changePercent: 0.92, latestTradingDay: new Date().toISOString().split('T')[0] },
-  { symbol: 'TSLA', price: 183.54, change: -2.34, changePercent: -1.26, latestTradingDay: new Date().toISOString().split('T')[0] }
-];
-
-const fallbackCryptoData = [
-  { symbol: 'BTC', name: 'Bitcoin', price: 67420.50, volume: 28450000000 },
-  { symbol: 'ETH', name: 'Ethereum', price: 3890.75, volume: 15230000000 },
-  { symbol: 'LTC', name: 'Litecoin', price: 95.42, volume: 580000000 },
-  { symbol: 'XRP', name: 'Ripple', price: 0.5234, volume: 1200000000 },
-  { symbol: 'ADA', name: 'Cardano', price: 0.4567, volume: 890000000 }
-];
-
+// Wait for the page to fully load before initializing dashboard
 document.addEventListener('DOMContentLoaded', async function() {
-  // Initialize dashboard elements with real or fallback data
-  await initializeMarketOverview();
-  await initializeWatchlist();
-  await initializeCryptoTracker();
+  console.log('Dashboard loading started...');
+  
+  // Initialize all dashboard sections with proper error handling
+  initializeLoadingStates();
+  await Promise.all([
+    initializeMarketOverview(),
+    initializeWatchlist(),
+    initializeCryptoTracker(),
+    initializeTopMovers()
+  ]);
   updateDateTime();
   
-  // Set up refresh button
+  // Set up refresh button functionality
   const refreshBtn = document.getElementById('refresh-dashboard');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', async function() {
@@ -52,220 +34,302 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 });
 
-// Update date and time
-function updateDateTime() {
-  const dateTimeElement = document.getElementById('current-datetime');
-  if (dateTimeElement) {
-    const updateTime = () => {
-      const now = new Date();
-      dateTimeElement.textContent = now.toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-      });
-    };
-    
-    updateTime(); // Update immediately
-    setInterval(updateTime, 1000);
-  }
+function initializeLoadingStates() {
+  const sections = ['market-overview', 'watchlist', 'crypto-tracker', 'top-gainers', 'top-losers'];
+  sections.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.innerHTML = `
+        <div class="flex justify-center items-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold-500"></div>
+        </div>
+      `;
+    }
+  });
 }
 
-// Initialize market overview section with real or fallback data
 async function initializeMarketOverview() {
   const marketOverviewElement = document.getElementById('market-overview');
   if (!marketOverviewElement) return;
   
   try {
-    // Show loading state
-    marketOverviewElement.innerHTML = '<div class="col-span-full text-center text-gold-400">Loading market data...</div>';
+    const indices = await getMarketIndices();
     
-    let marketIndices;
-    try {
-      marketIndices = await getMarketIndices();
-    } catch (error) {
-      console.log('Using fallback market data due to API error:', error);
-      marketIndices = fallbackMarketData;
+    if (!indices || indices.length === 0) {
+      throw new Error('No market indices data available');
     }
     
-    let marketOverviewHTML = '';
-    marketIndices.forEach(index => {
-      if (index) {
-        const changeClass = index.change >= 0 ? 'text-neon-green' : 'text-red-500';
-        const changeIcon = index.change >= 0 ? 
-          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>' : 
-          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>';
-        
-        marketOverviewHTML += `
-          <div class="glass glass-hover rounded-lg p-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="font-semibold text-gold-400">${index.symbol}</h3>
-                <span class="text-sm text-gray-400">${index.latestTradingDay}</span>
-              </div>
-              <div class="text-right">
-                <div class="text-xl font-bold">${formatCurrency(index.price, 'USD')}</div>
-                <div class="flex items-center ${changeClass}">
-                  ${changeIcon}
-                  <span class="ml-1">${index.change.toFixed(2)} (${index.changePercent.toFixed(2)}%)</span>
-                </div>
+    let html = '';
+    indices.forEach(index => {
+      const changeClass = index.change >= 0 ? 'text-neon-green' : 'text-red-500';
+      const changeIcon = index.change >= 0 ? '▲' : '▼';
+      
+      html += `
+        <div class="glass glass-hover rounded-lg p-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-semibold text-gold-400">${index.symbol}</h3>
+              <span class="text-sm text-gray-400">${index.name || index.symbol}</span>
+            </div>
+            <div class="text-right">
+              <div class="text-xl font-bold">$${index.price.toFixed(2)}</div>
+              <div class="flex items-center ${changeClass}">
+                ${changeIcon} ${Math.abs(index.change).toFixed(2)} (${index.changePercent.toFixed(2)}%)
               </div>
             </div>
           </div>
-        `;
-      }
+        </div>
+      `;
     });
     
-    marketOverviewElement.innerHTML = marketOverviewHTML;
+    marketOverviewElement.innerHTML = html;
   } catch (error) {
-    console.error('Error initializing market overview:', error);
-    marketOverviewElement.innerHTML = '<div class="col-span-full text-center text-red-500">Failed to load market data</div>';
+    console.error('Market overview error:', error);
+    marketOverviewElement.innerHTML = `
+      <div class="col-span-full glass rounded-lg p-4 text-center">
+        <p class="text-red-400">Unable to load market data</p>
+        <button onclick="location.reload()" class="mt-2 text-gold-400 hover:text-gold-300">
+          Try Again
+        </button>
+      </div>
+    `;
   }
 }
 
-// Initialize watchlist section with real or fallback data
 async function initializeWatchlist() {
   const watchlistElement = document.getElementById('watchlist');
   if (!watchlistElement) return;
   
   try {
-    // Show loading state
-    watchlistElement.innerHTML = '<div class="col-span-full text-center text-gold-400">Loading stock data...</div>';
+    const stocks = await getMajorStocks();
     
-    let stocks;
-    try {
-      stocks = await getMajorStocks();
-    } catch (error) {
-      console.log('Using fallback stock data due to API error:', error);
-      stocks = fallbackStockData;
+    if (!stocks || stocks.length === 0) {
+      throw new Error('No stocks data available');
     }
     
-    let watchlistHTML = '';
+    let html = '';
     stocks.forEach(stock => {
-      if (stock) {
-        const changeClass = stock.change >= 0 ? 'text-neon-green' : 'text-red-500';
-        const changeIcon = stock.change >= 0 ? 
-          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>' : 
-          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>';
-        
-        watchlistHTML += `
-          <div class="glass glass-hover rounded-lg p-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="font-semibold text-gold-400">${stock.symbol}</h3>
-                <span class="text-sm text-gray-400">${stock.latestTradingDay}</span>
-              </div>
-              <div class="text-right">
-                <div class="text-xl font-bold">${formatCurrency(stock.price, 'USD')}</div>
-                <div class="flex items-center ${changeClass}">
-                  ${changeIcon}
-                  <span class="ml-1">${stock.change.toFixed(2)} (${stock.changePercent.toFixed(2)}%)</span>
-                </div>
+      const changeClass = stock.change >= 0 ? 'text-neon-green' : 'text-red-500';
+      const changeIcon = stock.change >= 0 ? '▲' : '▼';
+      
+      html += `
+        <div class="glass glass-hover rounded-lg p-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-semibold text-gold-400">${stock.symbol}</h3>
+              <span class="text-sm text-gray-400">${stock.name || stock.symbol}</span>
+            </div>
+            <div class="text-right">
+              <div class="text-xl font-bold">$${stock.price.toFixed(2)}</div>
+              <div class="flex items-center ${changeClass}">
+                ${changeIcon} ${Math.abs(stock.change).toFixed(2)} (${stock.changePercent.toFixed(2)}%)
               </div>
             </div>
           </div>
-        `;
-      }
+        </div>
+      `;
     });
     
-    watchlistElement.innerHTML = watchlistHTML;
+    watchlistElement.innerHTML = html;
   } catch (error) {
-    console.error('Error initializing watchlist:', error);
-    watchlistElement.innerHTML = '<div class="col-span-full text-center text-red-500">Failed to load stock data</div>';
+    console.error('Watchlist error:', error);
+    watchlistElement.innerHTML = `
+      <div class="col-span-full glass rounded-lg p-4 text-center">
+        <p class="text-red-400">Unable to load watchlist data</p>
+        <button onclick="location.reload()" class="mt-2 text-gold-400 hover:text-gold-300">
+          Try Again
+        </button>
+      </div>
+    `;
   }
 }
 
-// Initialize crypto tracker section with real or fallback data
 async function initializeCryptoTracker() {
   const cryptoTrackerElement = document.getElementById('crypto-tracker');
   if (!cryptoTrackerElement) return;
   
   try {
-    // Show loading state
-    cryptoTrackerElement.innerHTML = '<div class="col-span-full text-center text-gold-400">Loading crypto data...</div>';
+    const cryptos = await getMajorCrypto();
     
-    let cryptos;
-    try {
-      cryptos = await getMajorCrypto();
-    } catch (error) {
-      console.log('Using fallback crypto data due to API error:', error);
-      cryptos = fallbackCryptoData;
+    if (!cryptos || cryptos.length === 0) {
+      throw new Error('No cryptocurrency data available');
     }
     
-    let cryptoHTML = '';
+    let html = '';
     cryptos.forEach(crypto => {
-      if (crypto) {
-        cryptoHTML += `
-          <div class="glass glass-hover rounded-lg p-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="font-semibold text-gold-400">${crypto.symbol}</h3>
-                <span class="text-sm text-gray-400">${crypto.name}</span>
+      const changeClass = crypto.change >= 0 ? 'text-neon-green' : 'text-red-500';
+      const changeIcon = crypto.change >= 0 ? '▲' : '▼';
+      
+      html += `
+        <div class="glass glass-hover rounded-lg p-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-semibold text-gold-400">${crypto.symbol}</h3>
+              <span class="text-sm text-gray-400">${crypto.name}</span>
+            </div>
+            <div class="text-right">
+              <div class="text-xl font-bold">$${crypto.price.toFixed(2)}</div>
+              <div class="flex items-center ${changeClass}">
+                ${changeIcon} ${Math.abs(crypto.change).toFixed(2)}%
               </div>
-              <div class="text-right">
-                <div class="text-xl font-bold">${formatCurrency(crypto.price, 'USD')}</div>
-                <div class="text-sm text-gray-400">Vol: ${crypto.volume.toLocaleString()}</div>
+              <div class="text-sm text-gray-400">
+                Vol: ${formatVolume(crypto.volume)}
               </div>
             </div>
           </div>
-        `;
-      }
+        </div>
+      `;
     });
     
-    cryptoTrackerElement.innerHTML = cryptoHTML;
+    cryptoTrackerElement.innerHTML = html;
   } catch (error) {
-    console.error('Error initializing crypto tracker:', error);
-    cryptoTrackerElement.innerHTML = '<div class="col-span-full text-center text-red-500">Failed to load crypto data</div>';
+    console.error('Crypto tracker error:', error);
+    cryptoTrackerElement.innerHTML = `
+      <div class="col-span-full glass rounded-lg p-4 text-center">
+        <p class="text-red-400">Unable to load cryptocurrency data</p>
+        <button onclick="location.reload()" class="mt-2 text-gold-400 hover:text-gold-300">
+          Try Again
+        </button>
+      </div>
+    `;
   }
 }
 
-// Refresh all dashboard data
+async function initializeTopMovers() {
+  const gainersElement = document.getElementById('top-gainers');
+  const losersElement = document.getElementById('top-losers');
+  if (!gainersElement || !losersElement) return;
+  
+  try {
+    const movers = await getMarketMovers();
+    
+    if (!movers || (!movers.gainers && !movers.losers)) {
+      throw new Error('No market movers data available');
+    }
+    
+    // Render gainers
+    let gainersHtml = '';
+    movers.gainers.forEach(stock => {
+      gainersHtml += `
+        <div class="glass glass-hover rounded-lg p-3">
+          <div class="flex justify-between items-center">
+            <span class="font-medium text-gold-400">${stock.symbol}</span>
+            <div class="text-right">
+              <div class="text-neon-green">
+                ▲ ${stock.changePercent.toFixed(2)}%
+              </div>
+              <div class="text-sm text-gray-400">
+                $${stock.price.toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    gainersElement.innerHTML = gainersHtml;
+    
+    // Render losers
+    let losersHtml = '';
+    movers.losers.forEach(stock => {
+      losersHtml += `
+        <div class="glass glass-hover rounded-lg p-3">
+          <div class="flex justify-between items-center">
+            <span class="font-medium text-gold-400">${stock.symbol}</span>
+            <div class="text-right">
+              <div class="text-red-500">
+                ▼ ${Math.abs(stock.changePercent).toFixed(2)}%
+              </div>
+              <div class="text-sm text-gray-400">
+                $${stock.price.toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    losersElement.innerHTML = losersHtml;
+  } catch (error) {
+    console.error('Top movers error:', error);
+    const errorHtml = `
+      <div class="glass rounded-lg p-4 text-center">
+        <p class="text-red-400">Unable to load market movers</p>
+        <button onclick="location.reload()" class="mt-2 text-gold-400 hover:text-gold-300">
+          Try Again
+        </button>
+      </div>
+    `;
+    gainersElement.innerHTML = errorHtml;
+    losersElement.innerHTML = errorHtml;
+  }
+}
+
+function updateDateTime() {
+  const dateTimeElement = document.getElementById('current-datetime');
+  if (!dateTimeElement) return;
+  
+  const updateTime = () => {
+    const now = new Date();
+    dateTimeElement.textContent = now.toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  };
+  
+  updateTime();
+  setInterval(updateTime, 1000);
+}
+
 async function refreshDashboardData() {
   try {
-    await initializeMarketOverview();
-    await initializeWatchlist();
-    await initializeCryptoTracker();
+    initializeLoadingStates();
+    await Promise.all([
+      initializeMarketOverview(),
+      initializeWatchlist(),
+      initializeCryptoTracker(),
+      initializeTopMovers()
+    ]);
     return true;
   } catch (error) {
-    console.error('Error refreshing dashboard data:', error);
-    showToast('Failed to refresh dashboard data. Please try again.', 'error');
+    console.error('Dashboard refresh error:', error);
+    showToast('Failed to refresh dashboard data', 'error');
     return false;
   }
 }
 
-// Currency formatting function
-function formatCurrency(amount, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
+function formatVolume(volume) {
+  if (!volume) return '$0';
+  
+  if (volume >= 1e12) return `$${(volume / 1e12).toFixed(1)}T`;
+  if (volume >= 1e9) return `$${(volume / 1e9).toFixed(1)}B`;
+  if (volume >= 1e6) return `$${(volume / 1e6).toFixed(1)}M`;
+  if (volume >= 1e3) return `$${(volume / 1e3).toFixed(1)}K`;
+  return `$${volume.toFixed(0)}`;
 }
 
-// Toast notification function
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   const toastMessage = document.getElementById('toast-message');
   
-  if (toast && toastMessage) {
-    toastMessage.textContent = message;
-    toast.classList.add('show');
-    
-    if (type === 'error') {
-      toast.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-      toast.style.color = '#ef4444';
-    } else {
-      toast.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-      toast.style.color = '#f59e0b';
-    }
-    
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
+  if (!toast || !toastMessage) return;
+  
+  toastMessage.textContent = message;
+  toast.classList.add('show');
+  
+  if (type === 'error') {
+    toast.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+    toast.style.color = '#ef4444';
+  } else {
+    toast.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+    toast.style.color = '#f59e0b';
   }
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
 }
