@@ -11,16 +11,20 @@ export async function getMajorStocks() {
 
 // Fetch major indices
 export async function getMarketIndices() {
-  const symbols = ['^GSPC', '^DJI', '^IXIC', '^RUT']; // S&P 500, Dow, NASDAQ, Russell
+  // Replacing indices with their ETF equivalents used in FMP
+  const symbols = ['SPY', 'DIA', 'QQQ', 'IWM']; // S&P 500, Dow, Nasdaq, Russell via ETFs
   const res = await fetch(`${BASE_URL}/quote/${symbols.join(',')}?apikey=${FMP_API_KEY}`);
+  if (!res.ok) throw new Error('Failed to fetch indices');
   return await res.json();
 }
 
+
 // Fetch top cryptocurrencies
 export async function getMajorCrypto() {
-  const res = await fetch(`${BASE_URL}/quotes/crypto?apikey=${FMP_API_KEY}`);
-  const data = await res.json();
-  return data.slice(0, 6); // only return first 6 for now
+  const symbols = ['BTCUSD', 'ETHUSD', 'LTCUSD', 'XRPUSD', 'ADAUSD'];
+  const res = await fetch(`${BASE_URL}/quote/${symbols.join(',')}?apikey=${FMP_API_KEY}`);
+  if (!res.ok) throw new Error('Failed to fetch crypto');
+  return await res.json();
 }
 
 // Fetch top gainers & losers
