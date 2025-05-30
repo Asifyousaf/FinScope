@@ -75,22 +75,29 @@ function setupStockComparison() {
 
 async function updateStockChart(symbol) {
   try {
-    const data = await fetchStockTimeSeries(symbol);
-    const labels = data.values.map(d => d.date);
-    const values = data.values.map(d => d.close);
+    const data = await fetchStockTimeSeries(symbol); // Your API fetch call
+
+    // map the data to chart labels and values
+    const labels = data.map(d => d.date);
+    const values = data.map(d => d.price);
+
+    // update your existing chart instance
     marketChart.data.labels = labels;
     marketChart.data.datasets = [{
       label: symbol,
       data: values,
       borderColor: '#f59e0b',
       backgroundColor: 'rgba(245, 158, 11, 0.1)',
-      tension: 0.4
+      tension: 0.4,
+      fill: true
     }];
+
     marketChart.update();
   } catch (err) {
     console.error('Stock chart update failed', err);
   }
 }
+
 
 function setupCryptoChart() {
   const canvas = document.getElementById('crypto-chart');
