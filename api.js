@@ -60,3 +60,41 @@ export async function fetchFinancialNews(query = 'finance', pageSize = 10) {
   }
 }
 
+// Get stock time series for charts using FMP API
+export async function fetchStockTimeSeries(symbol = 'AAPL', interval = '1hour') {
+  const apiKey = 'N0HwEJMrIhfamTzYUWc5DDMdScZQlNfl';
+  const url = `https://financialmodelingprep.com/api/v3/historical-chart/${interval}/${symbol}?apikey=${apiKey}`;
+  
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if (!Array.isArray(data)) throw new Error('Failed to fetch stock time series');
+
+  // Reverse to oldest-to-latest
+  return data.reverse().map(item => ({
+    date: item.date,
+    price: item.close
+  }));
+}
+
+// Get crypto time series data for charts using FMP API
+export async function fetchCryptoTimeSeries(symbol = 'BTCUSD', interval = '1hour') {
+  const apiKey = 'N0HwEJMrIhfamTzYUWc5DDMdScZQlNfl';
+  const url = `https://financialmodelingprep.com/api/v3/historical-chart/${interval}/${symbol}?apikey=${apiKey}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if (!Array.isArray(data)) throw new Error('Failed to fetch crypto time series');
+
+  // Reverse to oldest-to-latest
+  return data.reverse().map(item => ({
+    date: item.date,
+    price: item.close
+  }));
+}
+export {
+  fetchStockTimeSeries,
+  fetchCryptoTimeSeries,
+
+};
