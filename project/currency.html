@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Currency Converter - FinScope</title>
+    <meta name="description" content="Real-time currency conversion and exchange rates" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: 'hsl(0 0% 8%)',
+              foreground: 'hsl(45 100% 85%)',
+              card: 'hsl(0 0% 12%)',
+              'card-foreground': 'hsl(45 100% 85%)',
+              primary: 'hsl(45 93% 47%)',
+              'primary-foreground': 'hsl(0 0% 8%)',
+              secondary: 'hsl(0 0% 16%)',
+              'secondary-foreground': 'hsl(45 100% 85%)',
+              muted: 'hsl(0 0% 16%)',
+              'muted-foreground': 'hsl(45 20% 65%)',
+              accent: 'hsl(0 0% 16%)',
+              'accent-foreground': 'hsl(45 100% 85%)',
+              border: 'hsl(0 0% 20%)',
+              input: 'hsl(0 0% 16%)',
+              ring: 'hsl(45 93% 47%)',
+              gold: {
+                50: '#fffbeb',
+                100: '#fef3c7',
+                200: '#fde68a',
+                300: '#fcd34d',
+                400: '#fbbf24',
+                500: '#f59e0b',
+                600: '#d97706',
+                700: '#b45309',
+                800: '#92400e',
+                900: '#78350f',
+              },
+              neon: {
+                green: '#00ff88',
+                blue: '#00d4ff',
+                purple: '#a855f7',
+              }
+            },
+            keyframes: {
+              'glow': {
+                '0%, 100%': {
+                  boxShadow: '0 0 20px rgba(245, 158, 11, 0.5)'
+                },
+                '50%': {
+                  boxShadow: '0 0 40px rgba(245, 158, 11, 0.8)'
+                }
+              },
+              'float': {
+                '0%, 100%': {
+                  transform: 'translateY(0px)'
+                },
+                '50%': {
+                  transform: 'translateY(-10px)'
+                }
+              }
+            },
+            animation: {
+              'glow': 'glow 2s ease-in-out infinite',
+              'float': 'float 3s ease-in-out infinite',
+              'spin': 'spin 1s linear infinite'
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body class="bg-background text-foreground">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-gradient-to-r from-gold-400 to-gold-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
+            <span class="text-xl font-bold gradient-text">FinScope</span>
+          </div>
+          
+          <div class="hidden md:block">
+            <div class="flex items-center space-x-8">
+              <a href="index.html" class="text-gray-300 hover:text-gold-400 transition-colors">Home</a>
+              <a href="dashboard.html" class="text-gray-300 hover:text-gold-400 transition-colors">Dashboard</a>
+              <a href="currency.html" class="text-gold-400 border-b-2 border-gold-400 transition-colors">Currency</a>
+              <a href="news.html" class="text-gray-300 hover:text-gold-400 transition-colors">News</a>
+              <a href="trends.html" class="text-gray-300 hover:text-gold-400 transition-colors">Trends</a>
+              <a href="about.html" class="text-gray-300 hover:text-gold-400 transition-colors">About</a>
+              <a href="contact.html" class="text-gray-300 hover:text-gold-400 transition-colors">Contact</a>
+            </div>
+          </div>
+          
+          <div class="flex items-center space-x-4">
+            <a href="login.html" class="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold px-4 py-2 rounded-lg transition-all">
+              Login
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl font-bold gradient-text mb-4">Currency Converter</h1>
+          <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+            Convert between currencies with real-time exchange rates and track historical currency performance
+          </p>
+        </div>
+
+        <!-- Currency Converter -->
+        <section class="mb-12">
+          <div class="glass rounded-lg p-6 max-w-3xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Amount and Currencies -->
+              <div>
+                <div class="mb-6">
+                  <label for="amount" class="block text-gold-400 font-medium mb-2">Amount</label>
+                  <input 
+                    type="text" 
+                    id="amount" 
+                    class="w-full bg-black/50 border border-gold-500/30 focus:border-gold-500 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50"
+                    placeholder="Enter amount"
+                    value="1"
+                  />
+                </div>
+                
+                <div class="mb-6">
+                  <label for="from-currency" class="block text-gold-400 font-medium mb-2">From Currency</label>
+                  <select 
+                    id="from-currency" 
+                    class="w-full bg-black/50 border border-gold-500/30 focus:border-gold-500 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50"
+                  >
+                    <!-- Options will be added by JS -->
+                  </select>
+                </div>
+                
+                <div class="flex justify-center mb-6">
+                  <button 
+                    id="swap-currencies" 
+                    class="bg-gold-500/10 hover:bg-gold-500/20 text-gold-400 p-2 rounded-full transition-all"
+                  >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                    </svg>
+                  </button>
+                </div>
+                
+                <div class="mb-6">
+                  <label for="to-currency" class="block text-gold-400 font-medium mb-2">To Currency</label>
+                  <select 
+                    id="to-currency" 
+                    class="w-full bg-black/50 border border-gold-500/30 focus:border-gold-500 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50"
+                  >
+                    <!-- Options will be added by JS -->
+                  </select>
+                </div>
+                
+                <button 
+                  id="convert-btn" 
+                  class="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold py-3 rounded-lg transition-all"
+                >
+                  Convert Currency
+                </button>
+              </div>
+              
+              <!-- Results and History -->
+              <div>
+                <div class="glass p-6 rounded-lg mb-6 min-h-[180px] flex items-center justify-center">
+                  <div id="conversion-result" class="text-center hidden">
+                    <!-- Conversion result will be added by JS -->
+                  </div>
+                  <div id="conversion-loading" class="flex items-center justify-center hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-500"></div>
+                  </div>
+                  <div id="conversion-placeholder" class="text-center">
+                    <p class="text-gray-400">Enter an amount and select currencies to convert</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 class="text-gold-400 font-medium mb-3">Conversion History</h3>
+                  <div id="conversion-history" class="max-h-[200px] overflow-y-auto pr-2">
+                    <p class="text-gray-400">No conversion history yet</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Major Currency Pairs -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-semibold text-gold-400 mb-6">Major Currency Pairs</h2>
+          <div id="major-pairs" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <!-- Currency pairs will be added by JS -->
+          </div>
+        </section>
+
+        <!-- Historical Currency Chart -->
+        <section class="mb-12">
+          <div class="glass rounded-lg p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+              <h2 class="text-2xl font-semibold text-gold-400">Historical Exchange Rates</h2>
+              <div class="mt-4 md:mt-0 flex space-x-2">
+                <select 
+                  id="chart-period" 
+                  class="bg-black/50 border border-gold-500/30 focus:border-gold-500 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/50"
+                >
+                  <option value="1w">1 Week</option>
+                  <option value="1m" selected>1 Month</option>
+                  <option value="3m">3 Months</option>
+                  <option value="6m">6 Months</option>
+                  <option value="1y">1 Year</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="relative">
+              <div class="h-[400px]">
+                <canvas id="currency-chart"></canvas>
+              </div>
+              <div id="chart-loading" class="absolute inset-0 flex items-center justify-center bg-black/50 hidden">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-500"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Currency Resources -->
+        <section>
+          <h2 class="text-2xl font-semibold text-gold-400 mb-6">Currency Resources</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass glass-hover rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gold-400 mb-3">What Affects Exchange Rates?</h3>
+              <p class="text-gray-300 mb-4">
+                Exchange rates are influenced by various factors including interest rates, inflation, political stability, economic performance, and market sentiment.
+              </p>
+              <a href="#" class="text-gold-400 hover:text-gold-300 inline-flex items-center">
+                Learn more
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </a>
+            </div>
+            
+            <div class="glass glass-hover rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gold-400 mb-3">Currency Trading Basics</h3>
+              <p class="text-gray-300 mb-4">
+                Foreign exchange (forex) trading involves buying one currency and selling another. Learn about currency pairs, pips, leverage, and trading strategies.
+              </p>
+              <a href="#" class="text-gold-400 hover:text-gold-300 inline-flex items-center">
+                Learn more
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </a>
+            </div>
+            
+            <div class="glass glass-hover rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gold-400 mb-3">International Money Transfers</h3>
+              <p class="text-gray-300 mb-4">
+                Compare options for sending money internationally, including bank transfers, money transfer services, and digital payment platforms.
+              </p>
+              <a href="#" class="text-gold-400 hover:text-gold-300 inline-flex items-center">
+                Learn more
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-gold-500/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="flex items-center space-x-2 mb-4 md:mb-0">
+            <div class="w-8 h-8 bg-gradient-to-r from-gold-400 to-gold-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
+            <span class="text-xl font-bold gradient-text">FinScope</span>
+          </div>
+          
+          <div class="text-center md:text-right">
+            <p class="text-gray-400">&copy; 2024 FinScope. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast">
+      <span id="toast-message"></span>
+    </div>
+
+    <script type="module" src="main.js"></script>
+    <script type="module" src="currency.js"></script>
+  </body>
+</html>

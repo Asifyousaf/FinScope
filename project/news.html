@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Financial News - FinScope</title>
+    <meta name="description" content="Latest financial news and market insights" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: 'hsl(0 0% 8%)',
+              foreground: 'hsl(45 100% 85%)',
+              card: 'hsl(0 0% 12%)',
+              'card-foreground': 'hsl(45 100% 85%)',
+              primary: 'hsl(45 93% 47%)',
+              'primary-foreground': 'hsl(0 0% 8%)',
+              secondary: 'hsl(0 0% 16%)',
+              'secondary-foreground': 'hsl(45 100% 85%)',
+              muted: 'hsl(0 0% 16%)',
+              'muted-foreground': 'hsl(45 20% 65%)',
+              accent: 'hsl(0 0% 16%)',
+              'accent-foreground': 'hsl(45 100% 85%)',
+              border: 'hsl(0 0% 20%)',
+              input: 'hsl(0 0% 16%)',
+              ring: 'hsl(45 93% 47%)',
+              gold: {
+                50: '#fffbeb',
+                100: '#fef3c7',
+                200: '#fde68a',
+                300: '#fcd34d',
+                400: '#fbbf24',
+                500: '#f59e0b',
+                600: '#d97706',
+                700: '#b45309',
+                800: '#92400e',
+                900: '#78350f',
+              },
+              neon: {
+                green: '#00ff88',
+                blue: '#00d4ff',
+                purple: '#a855f7',
+              }
+            },
+            keyframes: {
+              'glow': {
+                '0%, 100%': {
+                  boxShadow: '0 0 20px rgba(245, 158, 11, 0.5)'
+                },
+                '50%': {
+                  boxShadow: '0 0 40px rgba(245, 158, 11, 0.8)'
+                }
+              },
+              'float': {
+                '0%, 100%': {
+                  transform: 'translateY(0px)'
+                },
+                '50%': {
+                  transform: 'translateY(-10px)'
+                }
+              }
+            },
+            animation: {
+              'glow': 'glow 2s ease-in-out infinite',
+              'float': 'float 3s ease-in-out infinite',
+              'spin': 'spin 1s linear infinite'
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body class="bg-background text-foreground">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-gradient-to-r from-gold-400 to-gold-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
+            <span class="text-xl font-bold gradient-text">FinScope</span>
+          </div>
+          
+          <div class="hidden md:block">
+            <div class="flex items-center space-x-8">
+              <a href="index.html" class="text-gray-300 hover:text-gold-400 transition-colors">Home</a>
+              <a href="dashboard.html" class="text-gray-300 hover:text-gold-400 transition-colors">Dashboard</a>
+              <a href="currency.html" class="text-gray-300 hover:text-gold-400 transition-colors">Currency</a>
+              <a href="news.html" class="text-gold-400 border-b-2 border-gold-400 transition-colors">News</a>
+              <a href="trends.html" class="text-gray-300 hover:text-gold-400 transition-colors">Trends</a>
+              <a href="about.html" class="text-gray-300 hover:text-gold-400 transition-colors">About</a>
+              <a href="contact.html" class="text-gray-300 hover:text-gold-400 transition-colors">Contact</a>
+            </div>
+          </div>
+          
+          <div class="flex items-center space-x-4">
+            <a href="login.html" class="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold px-4 py-2 rounded-lg transition-all">
+              Login
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl font-bold gradient-text mb-4">Financial News</h1>
+          <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+            Stay informed with the latest financial news, market updates, and economic insights
+          </p>
+        </div>
+
+        <!-- News Search -->
+        <section class="mb-12">
+          <div class="max-w-3xl mx-auto">
+            <form id="news-search-form" class="flex">
+              <input 
+                type="text" 
+                id="news-search-input" 
+                class="flex-grow bg-black/50 border border-gold-500/30 focus:border-gold-500 rounded-l-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50"
+                placeholder="Search for financial news..."
+              />
+              <button 
+                type="submit" 
+                class="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold px-6 rounded-r-lg transition-all"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Trending News -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-semibold text-gold-400 mb-6">Trending Now</h2>
+          <div id="trending-news">
+            <!-- News articles will be loaded by JS -->
+          </div>
+        </section>
+
+        <!-- Categories and News Feed -->
+        <section class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
+          <!-- Categories -->
+          <div>
+            <div class="glass rounded-lg p-6 sticky top-24">
+              <h2 class="text-xl font-semibold text-gold-400 mb-4">Categories</h2>
+              <div id="news-categories" class="flex flex-col space-y-3">
+                <!-- Categories will be loaded by JS -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- News Feed -->
+          <div class="lg:col-span-3">
+            <div>
+              <h2 class="text-2xl font-semibold text-gold-400 mb-6">
+                <span id="category-title">Markets</span> News
+              </h2>
+              <div id="category-news">
+                <!-- Category news will be loaded by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Search Results Section (hidden by default) -->
+        <section id="search-section" class="mb-12 hidden">
+          <h2 class="text-2xl font-semibold text-gold-400 mb-6">
+            <span id="search-title">Search Results</span>
+          </h2>
+          <div id="search-results">
+            <!-- Search results will be loaded by JS -->
+          </div>
+        </section>
+
+        <!-- Newsletter -->
+        <section>
+          <div class="glass rounded-lg p-8 text-center">
+            <h2 class="text-2xl font-semibold gradient-text mb-4">Stay Updated</h2>
+            <p class="text-gray-300 mb-6 max-w-2xl mx-auto">
+              Subscribe to our newsletter to receive daily financial insights, market analysis, and exclusive reports directly in your inbox.
+            </p>
+            <div class="max-w-md mx-auto">
+              <form id="newsletter-form" class="flex flex-col sm:flex-row">
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="Enter your email"
+                  class="flex-grow bg-black/50 border border-gold-500/30 focus:border-gold-500 rounded-lg sm:rounded-r-none px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50 mb-3 sm:mb-0"
+                  required
+                />
+                <button 
+                  type="submit" 
+                  id="subscribe-btn"
+                  class="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-semibold px-6 py-3 rounded-lg sm:rounded-l-none transition-all"
+                >
+                  Subscribe
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-gold-500/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="flex items-center space-x-2 mb-4 md:mb-0">
+            <div class="w-8 h-8 bg-gradient-to-r from-gold-400 to-gold-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
+            <span class="text-xl font-bold gradient-text">FinScope</span>
+          </div>
+          
+          <div class="text-center md:text-right">
+            <p class="text-gray-400">&copy; 2024 FinScope. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast">
+      <span id="toast-message"></span>
+    </div>
+
+    <script type="module" src="main.js"></script>
+    <script type="module" src="news.js"></script>
+  </body>
+</html>

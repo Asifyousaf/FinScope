@@ -1,4 +1,5 @@
 // Main JavaScript for shared functionality across pages
+// Main JavaScript for shared functionality across pages
 import { supabase } from './src/supabase.js';
 
 // Initialize auth state and profile dropdown
@@ -13,16 +14,8 @@ async function checkAuthState() {
     const loginLink = document.getElementById('login-link');
     const profileContainer = document.getElementById('profile-container');
     
-    // Add placeholder elements to prevent layout shift
-    if (loginLink) loginLink.style.visibility = 'hidden';
-    if (profileContainer) profileContainer.style.visibility = 'hidden';
-    
     if (session) {
-      if (loginLink) {
-        loginLink.style.display = 'none';
-        loginLink.style.visibility = 'visible';
-      }
-      
+      if (loginLink) loginLink.classList.add('hidden');
       if (profileContainer) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -30,8 +23,7 @@ async function checkAuthState() {
           .eq('id', session.user.id)
           .single();
           
-        profileContainer.style.display = 'flex';
-        profileContainer.style.visibility = 'visible';
+        profileContainer.classList.remove('hidden');
         
         const nameSpan = document.getElementById('profile-name');
         const emailDiv = document.getElementById('profile-email');
@@ -40,14 +32,8 @@ async function checkAuthState() {
         if (emailDiv) emailDiv.textContent = session.user.email;
       }
     } else {
-      if (loginLink) {
-        loginLink.style.display = 'flex';
-        loginLink.style.visibility = 'visible';
-      }
-      if (profileContainer) {
-        profileContainer.style.display = 'none';
-        profileContainer.style.visibility = 'visible';
-      }
+      if (loginLink) loginLink.classList.remove('hidden');
+      if (profileContainer) profileContainer.classList.add('hidden');
     }
   } catch (error) {
     console.error('Error checking auth state:', error);
@@ -64,6 +50,7 @@ function setupProfileDropdown() {
       profileDropdown.classList.toggle('hidden');
     });
 
+    // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
         profileDropdown.classList.add('hidden');
@@ -76,7 +63,6 @@ function setupProfileDropdown() {
     logoutBtn.addEventListener('click', async () => {
       try {
         await supabase.auth.signOut();
-        localStorage.removeItem('supabase.auth.token');
         window.location.href = 'index.html';
       } catch (error) {
         console.error('Error signing out:', error);
@@ -85,8 +71,7 @@ function setupProfileDropdown() {
     });
   }
 }
-
-// Global toast notification function
+// Toast notification function (global)
 window.showToast = function(message, type = 'success') {
   const toast = document.getElementById('toast');
   const toastMessage = document.getElementById('toast-message');
@@ -108,7 +93,6 @@ window.showToast = function(message, type = 'success') {
     toast.classList.remove('show');
   }, 3000);
 };
-
 // Format currency
 window.formatCurrency = function(number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { 
@@ -222,42 +206,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
-
- // Setup mobile menu
- const mobileMenuBtn = document.getElementById('mobile-menu-btn');
- const mobileMenu = document.getElementById('mobile-menu');
- 
- if (mobileMenuBtn && mobileMenu) {
-   mobileMenuBtn.addEventListener('click', () => {
-     mobileMenu.classList.toggle('show');
-     const isOpen = mobileMenu.classList.contains('show');
-     
-     // Update aria-expanded
-     mobileMenuBtn.setAttribute('aria-expanded', isOpen);
-     
-     // Update icon
-     const icon = mobileMenuBtn.querySelector('.menu-icon');
-     if (icon) {
-       icon.innerHTML = isOpen 
-         ? `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`
-         : `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
-     }
-   });
- }
-
- // Close mobile menu when clicking outside
- document.addEventListener('click', (e) => {
-   if (mobileMenu && mobileMenu.classList.contains('show')) {
-     const isClickInside = mobileMenu.contains(e.target) || 
-                         mobileMenuBtn.contains(e.target);
-     
-     if (!isClickInside) {
-       mobileMenu.classList.remove('show');
-       mobileMenuBtn.setAttribute('aria-expanded', 'false');
-       const icon = mobileMenuBtn.querySelector('.menu-icon');
-       if (icon) {
-         icon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
-       }
-     }
-   }
- });
