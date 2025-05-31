@@ -10,29 +10,29 @@ import {
 let marketChart = null;
 let cryptoChart = null;
 
-// Initialize page
+// Initialize the page when DOM is fully loaded
 window.addEventListener('DOMContentLoaded', async () => {
-  await renderMarketTrends();
-  setupStockComparison();
-  setupCryptoChart();
-  setupStockSearch();
+  await renderMarketTrends();      // Display market indices
+  setupStockComparison();         // Set up stock comparison chart
+  setupCryptoChart();             // Set up crypto chart
+  setupStockSearch();             // Enable stock symbol search
 });
 
+// Render stock market indices 
 async function renderMarketTrends() {
   const container = document.getElementById('market-trends');
   if (!container) return;
+
   try {
-    const indices = await getMarketIndices();
-    console.log('Market indices:', indices);
+    const indices = await getMarketIndices(); // Fetch market index data
     let html = '';
+
     indices.forEach(item => {
-      console.log('Index item:', item);
       const changeClass = item.change >= 0 ? 'text-neon-green' : 'text-red-500';
       const icon = item.change >= 0 ? '▲' : '▼';
+      const changePercent = item.changePercent ?? 0; // Fallback for missing data
 
-      // Defensive checks:
-      const changePercent = item.changePercent ?? 0;
-
+      // Generate HTML for each market index
       html += `
         <div class="glass rounded-lg p-6">
           <h3 class="text-lg font-semibold text-gold-400 mb-2">${item.symbol}</h3>
@@ -43,6 +43,7 @@ async function renderMarketTrends() {
         </div>
       `;
     });
+
     container.innerHTML = html;
   } catch (err) {
     console.error('Error in renderMarketTrends:', err);
@@ -50,12 +51,15 @@ async function renderMarketTrends() {
   }
 }
 
+// Setup the stock comparison chart and button events
 function setupStockComparison() {
   const buttons = document.querySelectorAll('.stock-selector');
   const canvas = document.getElementById('stock-comparison-chart');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
+
+  // Initialize Chart.js line chart
   marketChart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: [] },
@@ -70,6 +74,7 @@ function setupStockComparison() {
     }
   });
 
+  // Add click event to each stock button
   buttons.forEach(button => {
     button.addEventListener('click', async () => {
       const symbol = button.dataset.symbol;
@@ -77,18 +82,17 @@ function setupStockComparison() {
     });
   });
 
+  // Load default stock chart
   updateStockChart('AAPL');
 }
 
+// Update stock comparison chart for selected symbol
 async function updateStockChart(symbol) {
   try {
-    const data = await fetchStockTimeSeries(symbol); // Your API fetch call
-
-    // map the data to chart labels and values
+    const data = await fetchStockTimeSeries(symbol); // Fetch time series data
     const labels = data.map(d => d.date);
     const values = data.map(d => d.price);
 
-    // update your existing chart instance
     marketChart.data.labels = labels;
     marketChart.data.datasets = [{
       label: symbol,
@@ -105,13 +109,15 @@ async function updateStockChart(symbol) {
   }
 }
 
-
+// Setup crypto chart and period selector buttons
 function setupCryptoChart() {
   const canvas = document.getElementById('crypto-chart');
   const buttons = document.querySelectorAll('.time-selector');
   if (!canvas) return;
+
   const ctx = canvas.getContext('2d');
 
+  // Initialize Chart.js crypto chart
   cryptoChart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: [] },
@@ -126,6 +132,7 @@ function setupCryptoChart() {
     }
   });
 
+  // Attach event listeners to time range buttons
   buttons.forEach(btn => {
     btn.addEventListener('click', async () => {
       const period = btn.dataset.period;
@@ -133,14 +140,17 @@ function setupCryptoChart() {
     });
   });
 
+  // Load default period
   updateCryptoChart('1m');
 }
 
+// Update crypto chart with selected time period data
 async function updateCryptoChart(period) {
   try {
     const data = await fetchCryptoTimeSeries('BTCUSD', period);
     const labels = data.map(p => p.date);
     const values = data.map(p => p.price);
+
     cryptoChart.data.labels = labels;
     cryptoChart.data.datasets = [{
       label: 'BTCUSD',
@@ -150,12 +160,14 @@ async function updateCryptoChart(period) {
       tension: 0.4,
       fill: true
     }];
+
     cryptoChart.update();
   } catch (err) {
     console.error('Crypto chart update failed', err);
   }
 }
 
+// Setup stock search form for manual symbol lookup
 function setupStockSearch() {
   const form = document.getElementById('stock-search-form');
   const input = document.getElementById('stock-search-input');
@@ -163,14 +175,18 @@ function setupStockSearch() {
   const section = document.getElementById('stock-lookup-section');
   if (!form) return;
 
+  // Handle stock search form submission
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const symbol = input.value.trim().toUpperCase();
     if (!symbol) return;
+
     try {
-      const data = await fetchStockData(symbol);
+      const data = await fetchStockData(symbol); // Get stock info by symbol
       const changeClass = data.change >= 0 ? 'text-neon-green' : 'text-red-500';
       const icon = data.change >= 0 ? '▲' : '▼';
+
+      // Display stock data in results section
       results.innerHTML = `
         <div class="glass rounded-lg p-6">
           <h3 class="text-2xl font-semibold text-gold-400 mb-2">${data.symbol}</h3>
@@ -191,6 +207,7 @@ function setupStockSearch() {
           </div>
         </div>
       `;
+
       section.classList.remove('hidden');
     } catch (err) {
       results.innerHTML = '<p class="text-red-500">Stock not found.</p>';

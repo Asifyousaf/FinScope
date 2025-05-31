@@ -1,26 +1,30 @@
+// Pulling in all our API helpers (these give us market data, crypto prices, etc.)
 import {
   getMarketIndices,
   getMajorStocks,
   getMajorCrypto
 } from './api.js';
 
+// Once the page is fully loaded, run this stuff
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadDashboardData();
-  updateDateTime();
+  await loadDashboardData(); // grab all initial data
+  updateDateTime(); // start showing the clock
 
+  // Set up refresh button (if it exists)
   const refreshBtn = document.getElementById('refresh-dashboard');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', async () => {
-      refreshBtn.classList.add('animate-spin');
-      await loadDashboardData();
+      refreshBtn.classList.add('animate-spin'); // add spinning animation
+      await loadDashboardData(); // reload everything
       setTimeout(() => {
-        refreshBtn.classList.remove('animate-spin');
-        showToast('Dashboard data refreshed successfully!');
-      }, 1000);
+        refreshBtn.classList.remove('animate-spin'); // stop the spin
+        showToast('Dashboard data refreshed successfully!'); // show message
+      }, 1000); // delay is just for smoother UI
     });
   }
 });
 
+// Loads everything: stocks, crypto, and market indices
 async function loadDashboardData() {
   await Promise.all([
     renderMarketOverview(),
@@ -29,9 +33,10 @@ async function loadDashboardData() {
   ]);
 }
 
+// Updates the time every second – useful for a dashboard vibe
 function updateDateTime() {
   const el = document.getElementById('current-datetime');
-  if (!el) return;
+  if (!el) return; // bail out if the element is missing
 
   const update = () => {
     el.textContent = new Date().toLocaleString('en-US', {
@@ -46,24 +51,26 @@ function updateDateTime() {
     });
   };
 
-  update();
-  setInterval(update, 1000);
+  update(); // run once immediately
+  setInterval(update, 1000); // then every second
 }
 
+// Loads market indices and displays them
 async function renderMarketOverview() {
   const el = document.getElementById('market-overview');
   if (!el) return;
-  el.innerHTML = loadingSpinner();
+  el.innerHTML = loadingSpinner(); // show loading
 
   try {
-    const data = await getMarketIndices();
-    el.innerHTML = data.map(renderCard).join('');
+    const data = await getMarketIndices(); // fetch data
+    el.innerHTML = data.map(renderCard).join(''); // render all cards
   } catch (err) {
     console.error('Market overview error:', err);
-    el.innerHTML = errorMessage('market data');
+    el.innerHTML = errorMessage('market data'); // show error message
   }
 }
 
+// Shows top stock list (like a watchlist)
 async function renderWatchlist() {
   const el = document.getElementById('watchlist');
   if (!el) return;
@@ -78,6 +85,7 @@ async function renderWatchlist() {
   }
 }
 
+// Shows crypto prices — looks a bit different from stock/market cards
 async function renderCryptoTracker() {
   const el = document.getElementById('crypto-tracker');
   if (!el) return;
@@ -104,6 +112,8 @@ async function renderCryptoTracker() {
     el.innerHTML = errorMessage('crypto data');
   }
 }
+
+// Creates a card 
 
 function renderCard(item) {
   const isUp = item.change >= 0;
@@ -134,6 +144,7 @@ function renderCard(item) {
   `;
 }
 
+// Basic spinner for loading states 
 function loadingSpinner() {
   return `
     <div class="flex justify-center items-center py-6">
@@ -142,6 +153,7 @@ function loadingSpinner() {
   `;
 }
 
+// Shows a reusable error block when data fails to load
 function errorMessage(type) {
   return `
     <div class="text-center text-red-500">
@@ -153,6 +165,7 @@ function errorMessage(type) {
   `;
 }
 
+// Converts numbers to $ format 
 function formatCurrency(amount, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -162,14 +175,16 @@ function formatCurrency(amount, currency = 'USD') {
   }).format(amount);
 }
 
+// Takes a big volume number and shortens it
 function formatVolume(vol) {
   if (vol >= 1e12) return (vol / 1e12).toFixed(1) + 'T';
   if (vol >= 1e9) return (vol / 1e9).toFixed(1) + 'B';
   if (vol >= 1e6) return (vol / 1e6).toFixed(1) + 'M';
   if (vol >= 1e3) return (vol / 1e3).toFixed(1) + 'K';
-  return vol.toLocaleString();
+  return vol.toLocaleString(); // fallback
 }
 
+// Little toast notification at the bottom 
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   const messageBox = document.getElementById('toast-message');
@@ -183,5 +198,5 @@ function showToast(message, type = 'success') {
 
   setTimeout(() => {
     toast.classList.remove('show');
-  }, 3000);
+  }, 3000); // hide after 3 secs
 }

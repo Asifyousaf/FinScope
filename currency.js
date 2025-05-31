@@ -1,23 +1,28 @@
+
 document.addEventListener('DOMContentLoaded', function () {
-  initializeCurrencyConverter();
-  setupEventListeners();
-  loadMajorCurrencyPairs();
-  loadConversionHistory();
+  initializeCurrencyConverter(); // Fill currency dropdowns
+  setupEventListeners();        // Set up button/input interactions
+  loadMajorCurrencyPairs();     // Load popular currency exchange rates
+  loadConversionHistory();      // Load and display previous conversions
 });
 
+// Sets up event listeners for user interactions
 function setupEventListeners() {
   const convertBtn = document.getElementById('convert-btn');
   const swapBtn = document.getElementById('swap-currencies');
   const amountInput = document.getElementById('amount');
 
+  // When the convert button is clicked run the conversion
   if (convertBtn) {
     convertBtn.addEventListener('click', handleCurrencyConversion);
   }
 
+  // When the swap button is clicked switch the currencies
   if (swapBtn) {
     swapBtn.addEventListener('click', swapCurrencies);
   }
 
+  // Restrict the amount input to numbers and dots only
   if (amountInput) {
     amountInput.addEventListener('input', function () {
       this.value = this.value.replace(/[^0-9.]/g, '');
@@ -25,6 +30,7 @@ function setupEventListeners() {
   }
 }
 
+// Initializes the dropdowns with a list of popular currencies
 function initializeCurrencyConverter() {
   const fromCurrencySelect = document.getElementById('from-currency');
   const toCurrencySelect = document.getElementById('to-currency');
@@ -33,6 +39,7 @@ function initializeCurrencyConverter() {
 
   const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF'];
 
+  // Add each currency to both dropdowns
   currencies.forEach(code => {
     const fromOption = document.createElement('option');
     fromOption.value = code;
@@ -45,10 +52,12 @@ function initializeCurrencyConverter() {
     toCurrencySelect.appendChild(toOption);
   });
 
+  // Set default selection
   fromCurrencySelect.value = 'USD';
   toCurrencySelect.value = 'EUR';
 }
 
+// Handles the currency conversion process
 async function handleCurrencyConversion() {
   const fromCurrency = document.getElementById('from-currency').value;
   const toCurrency = document.getElementById('to-currency').value;
@@ -57,6 +66,7 @@ async function handleCurrencyConversion() {
   const loadingElement = document.getElementById('conversion-loading');
   const placeholderElement = document.getElementById('conversion-placeholder');
 
+  // Validate input
   if (isNaN(amount) || amount <= 0) {
     showToast('Please enter a valid amount', 'error');
     return;
@@ -67,16 +77,19 @@ async function handleCurrencyConversion() {
     return;
   }
 
+  // Show loading spinner hide previous results
   if (placeholderElement) placeholderElement.style.display = 'none';
   if (resultElement) resultElement.style.display = 'none';
   if (loadingElement) loadingElement.style.display = 'flex';
 
   try {
+    // Fetch conversion rate from the API
     const response = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${fromCurrency}&to=${toCurrency}`);
     const data = await response.json();
     const rate = data.rates[toCurrency];
     const converted = rate;
 
+    // Show the result
     resultElement.innerHTML = `
       <div class="text-2xl font-bold gradient-text mb-2">
         ${amount.toFixed(2)} ${fromCurrency} = ${converted.toFixed(2)} ${toCurrency}
@@ -88,6 +101,7 @@ async function handleCurrencyConversion() {
     resultElement.style.display = 'block';
     loadingElement.style.display = 'none';
 
+    // Save the conversion to history
     addToConversionHistory(fromCurrency, toCurrency, amount, converted);
     showToast('Currency converted successfully');
   } catch (error) {
@@ -97,6 +111,7 @@ async function handleCurrencyConversion() {
   }
 }
 
+// Swaps the selected currencies in the dropdowns
 function swapCurrencies() {
   const fromSelect = document.getElementById('from-currency');
   const toSelect = document.getElementById('to-currency');
@@ -108,6 +123,7 @@ function swapCurrencies() {
   showToast('Currencies swapped');
 }
 
+// Loads and displays current rates for major currency pairs
 async function loadMajorCurrencyPairs() {
   const majorPairsElement = document.getElementById('major-pairs');
   if (!majorPairsElement) return;
@@ -123,6 +139,7 @@ async function loadMajorCurrencyPairs() {
 
   let html = '';
 
+  // Fetch the rate for each major pair and build HTML content
   for (const [from, to] of pairs) {
     try {
       const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
@@ -145,14 +162,16 @@ async function loadMajorCurrencyPairs() {
   majorPairsElement.innerHTML = html;
 }
 
+// Adds a new item to the conversion history (stored in localStorage)
 function addToConversionHistory(from, to, amount, converted) {
   let history = [];
   try {
     history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
   } catch { }
 
+  // Add new item at the top
   history.unshift({
-    id: Date.now(),
+    id: Date.now(), // Unique ID
     fromCurrency: from,
     toCurrency: to,
     amount,
@@ -160,11 +179,14 @@ function addToConversionHistory(from, to, amount, converted) {
     timestamp: new Date().toISOString()
   });
 
+  // Keep only the latest 5 records
   history = history.slice(0, 5);
   localStorage.setItem('conversionHistory', JSON.stringify(history));
-  loadConversionHistory();
+
+  loadConversionHistory(); // Refresh the UI
 }
 
+// Loads and displays the saved conversion history
 function loadConversionHistory() {
   const historyElement = document.getElementById('conversion-history');
   if (!historyElement) return;
@@ -179,6 +201,7 @@ function loadConversionHistory() {
     return;
   }
 
+  // Display each history item with a delete button
   historyElement.innerHTML = history.map(item => {
     const date = new Date(item.timestamp).toLocaleString();
     return `
@@ -197,18 +220,22 @@ function loadConversionHistory() {
   }).join('');
 }
 
+// Deletes a specific item from the conversion history
 function deleteConversionHistory(id) {
   let history = [];
   try {
     history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
   } catch { }
 
+  // Remove the item with the matching ID
   history = history.filter(item => item.id !== id);
   localStorage.setItem('conversionHistory', JSON.stringify(history));
-  loadConversionHistory();
+
+  loadConversionHistory(); // Refresh history display
   showToast('History item deleted');
 }
 
+// Shows a temporary notification message (toast)
 function showToast(message, type = 'info') {
   const toast = document.getElementById('toast');
   const toastMessage = document.getElementById('toast-message');
@@ -219,6 +246,7 @@ function showToast(message, type = 'info') {
   toast.className = `toast ${type === 'error' ? 'error' : 'success'}`;
   toast.style.display = 'block';
 
+  // Hide the toast after 3 seconds
   setTimeout(() => {
     toast.style.display = 'none';
   }, 3000);

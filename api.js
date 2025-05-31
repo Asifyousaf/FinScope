@@ -1,6 +1,6 @@
 
 // Financial data API service
-// Using Alpha Vantage for stock/currency data and News API for news
+// Using Alpha Vantage as and backup , using api.frankfurter.app for currency data and News API for news
 
 const ALPHA_VANTAGE_API_KEY = 'Q1J2GM7L9WMRDS9A';
 const NEWS_API_KEY = '1cb3fb8e7cb64f9f8c7130008c22820c';

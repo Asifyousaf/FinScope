@@ -96,8 +96,8 @@ function initializeOfficeLocations() {
   // Office data - could move this to a separate file if it gets bigger
   const officeLocations = [
     {
-      city: 'New York',
-      address: '123 Finance Street, Suite 400, New York, NY 10001',
+      city: 'Dubai',
+      address: '123 Finance Street, Suite 400, Jumeriah Street, Dubai, UAE',
       phone: '+1 (212) 555-1234',
       email: 'newyork@finscope.com'
     },
