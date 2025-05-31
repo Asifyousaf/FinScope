@@ -14,7 +14,9 @@ export default defineConfig({
         about: 'about.html',
         contact: 'contact.html',
         login: 'login.html',
-        profile: 'profile.html'
+        profile: 'profile.html',
+        privacy: 'privacy.html',
+        terms: 'terms.html'
       }
     }
   },
